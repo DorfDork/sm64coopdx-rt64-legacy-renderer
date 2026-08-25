@@ -31,6 +31,7 @@ RT64::Scene::Scene(Device *device) {
 	description.giSkyStrength = 0.35f;
 	lightsBufferSize = 0;
 	lightsCount = 0;
+	volumetricLights = false;
 
 	device->addScene(this);
 }
@@ -104,7 +105,12 @@ void RT64::Scene::addView(View *view) {
 }
 
 void RT64::Scene::removeView(View *view) {
-	// TODO
+	assert(view != nullptr);
+
+	auto it = std::find(views.begin(), views.end(), view);
+	if (it != views.end()) {
+		views.erase(it);
+	}
 }
 
 const std::vector<RT64::View *> &RT64::Scene::getViews() const {
@@ -116,6 +122,31 @@ void RT64::Scene::setLights(RT64_LIGHT *lightArray, int lightCount) {
 	static std::uniform_real_distribution<float> randomDistribution(0.0f, 1.0f);
 
 	assert(lightCount > 0);
+
+	const bool lightsChanged = (lastLights.size() != (size_t)(lightCount)) ||
+		((lightCount > 0) && (lightArray != nullptr) && (memcmp(lastLights.data(), lightArray, sizeof(RT64_LIGHT) * lightCount) != 0));
+
+	if (lightsChanged) {
+		if (lightArray != nullptr) {
+			lastLights.assign(lightArray, lightArray + lightCount);
+		}
+		else {
+			lastLights.clear();
+		}
+
+		volumetricLights = false;
+		for (const RT64_LIGHT &light : lastLights) {
+			if ((light.lightType == RT64_LIGHT_TYPE_POINT) && (light.volumetricEnabled != 0)) {
+				volumetricLights = true;
+				break;
+			}
+		}
+
+		for (View *view : views) {
+			view->skipReprojection();
+		}
+	}
+
 	size_t newSize = ROUND_UP(sizeof(RT64_LIGHT) * lightCount, D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT);
 	if (newSize != lightsBufferSize) {
 		lightsBuffer.Release();
@@ -127,19 +158,28 @@ void RT64::Scene::setLights(RT64_LIGHT *lightArray, int lightCount) {
 	size_t i = 0;
 	D3D12_CHECK(lightsBuffer.Get()->Map(0, nullptr, (void **)&pData));
 	if (lightArray != nullptr) {
-		memcpy(pData, lightArray, sizeof(RT64_LIGHT) * lightCount);
-
-		// Modify light colors with flicker intensity if necessary.
+		const float degToRad = 3.14159265358979323846f / 180.0f;
 		while (i < lightCount) {
-			RT64_LIGHT *light = ((RT64_LIGHT *)(pData));
-			const float flickerIntensity = light->flickerIntensity;
-			if (flickerIntensity > 0.0) {
-				const float flickerMult = 1.0f + ((randomDistribution(randomEngine) * 2.0f - 1.0f) * flickerIntensity);
-				light->diffuseColor.x *= flickerMult;
-				light->diffuseColor.y *= flickerMult;
-				light->diffuseColor.z *= flickerMult;
-			}
+			RT64_LIGHT light = lightArray[i];
+			const float colorScale = light.intensity / 255.0f;
+			const float flickerIntensity = light.flickerIntensity;
+			const float flickerMult = (flickerIntensity > 0.0f)
+				? (1.0f + ((randomDistribution(randomEngine) * 2.0f - 1.0f) * flickerIntensity))
+				: 1.0f;
 
+			light.diffuseColor.x *= colorScale * flickerMult;
+			light.diffuseColor.y *= colorScale * flickerMult;
+			light.diffuseColor.z *= colorScale * flickerMult;
+			light.specularColor.x *= colorScale;
+			light.specularColor.y *= colorScale;
+			light.specularColor.z *= colorScale;
+			light.pitch *= degToRad;
+			light.yaw *= degToRad;
+			light.roll *= degToRad;
+			light.aperturePitch *= degToRad;
+			light.apertureYaw *= degToRad;
+
+			memcpy(pData, &light, sizeof(RT64_LIGHT));
 			pData += sizeof(RT64_LIGHT);
 			i++;
 		}
@@ -155,6 +195,10 @@ ID3D12Resource *RT64::Scene::getLightsBuffer() const {
 
 int RT64::Scene::getLightsCount() const {
 	return lightsCount;
+}
+
+bool RT64::Scene::getVolumetricLights() const {
+	return volumetricLights;
 }
 
 const std::vector<RT64::Instance *> &RT64::Scene::getInstances() const {

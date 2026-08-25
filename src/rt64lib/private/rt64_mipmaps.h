@@ -17,6 +17,7 @@ namespace RT64 {
 		ID3D12DescriptorHeap *d3dDescriptorHeaps[16];
 	public:
 		Mipmaps(Device *device);
+		~Mipmaps();
 		void generate(ID3D12Resource *sourceTexture);
 	};
 };

@@ -15,12 +15,7 @@
 #include "Lights.hlsli"
 #include "Fog.hlsli"
 #include "BgSky.hlsli"
-
-float FresnelReflectAmount(float3 normal, float3 incident, float reflectivity, float fresnelMultiplier) {
-	// TODO: Probably use a more accurate approximation than this.
-	float ret = pow(clamp(1.0f + dot(normal, incident), EPSILON, 1.0f), 5.0f);
-	return reflectivity + ((1.0 - reflectivity) * ret * fresnelMultiplier);
-}
+#include "Reflection.hlsli"
 
 [shader("raygeneration")]
 void ReflectionRayGen() {
@@ -90,7 +85,7 @@ void ReflectionRayGen() {
 			float3 specular = instanceMaterials[hitInstanceId].specularColor * vertexSpecular.rgb;
 			float reflectionFactor = instanceMaterials[hitInstanceId].reflectionFactor;
 			if (reflectionFactor > EPSILON) {
-				float reflectionFresnelFactor = instanceMaterials[instanceId].reflectionFresnelFactor;
+				float reflectionFresnelFactor = instanceMaterials[hitInstanceId].reflectionFresnelFactor;
 				float fresnelAmount = FresnelReflectAmount(vertexNormal, rayDirection, reflectionFactor, reflectionFresnelFactor);
 				newReflectionAlpha += fresnelAmount * alphaContrib * reflectionAlpha;
 			}
@@ -99,7 +94,7 @@ void ReflectionRayGen() {
 				resColor.rgb += hitColor.rgb * alphaContrib;
 			}
 			else {
-				resTransparent += hitColor.rgb * alphaContrib * (ambientBaseColor.rgb + ambientNoGIColor.rgb + instanceMaterials[hitInstanceId].selfLight);
+				resTransparent += hitColor.rgb * alphaContrib * (ambientBaseColor.rgb + ambientNoGIColor.rgb + instanceMaterials[hitInstanceId].selfLightColor);
 			}
 
 			resPosition = vertexPosition;
@@ -115,7 +110,7 @@ void ReflectionRayGen() {
 	}
 
 	if (resInstanceId >= 0) {
-		float3 directLight = ComputeLightsRandom(launchIndex, rayDirection, resInstanceId, resPosition, resNormal, resSpecular, 1, false) + instanceMaterials[resInstanceId].selfLight;
+		float3 directLight = ComputeLightsRandom(launchIndex, resInstanceId, resPosition, resNormal, 1, false) + instanceMaterials[resInstanceId].selfLightColor;
 		resColor.rgb *= (ambientBaseColor.rgb + ambientNoGIColor.rgb + directLight);
 		gShadingPosition[launchIndex] = float4(resPosition, 0.0f);
 		gViewDirection[launchIndex] = float4(rayDirection, 0.0f);
@@ -136,7 +131,8 @@ void ReflectionRayGen() {
 	resColor.rgb = lerp(resColor.rgb, ShadowColor, pow(max(-rayDirection.y, 0.0f) * reflectionShineFactor, BlendingExponent));
 
 	// Add reflection result.
-	gReflection[launchIndex].rgb += resColor.rgb * reflectionAlpha * saturate(1.0f - newReflectionAlpha);
+	float3 reflectionColor = instanceMaterials[instanceId].reflectionColor;
+	gReflection[launchIndex].rgb += resColor.rgb * reflectionColor * reflectionAlpha * saturate(1.0f - newReflectionAlpha);
 
 	// Store parameters for new reflection.
 	gReflection[launchIndex].a = saturate(newReflectionAlpha);

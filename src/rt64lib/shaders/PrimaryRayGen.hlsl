@@ -7,6 +7,9 @@
 #include "GlobalBuffers.hlsli"
 #include "GlobalParams.hlsli"
 #include "GlobalHitBuffers.hlsli"
+
+RWTexture2D<int> gInstanceIdPick : register(u27);
+
 #include "Materials.hlsli"
 #include "Instances.hlsli"
 #include "Random.hlsli"
@@ -15,17 +18,12 @@
 #include "BgSky.hlsli"
 #include "Lights.hlsli"
 #include "Fog.hlsli"
+#include "Reflection.hlsli"
 
 float2 WorldToScreenPos(float4x4 viewProj, float3 worldPos) {
 	float4 clipSpace = mul(viewProj, float4(worldPos, 1.0f));
 	float3 NDC = clipSpace.xyz / clipSpace.w;
 	return (0.5f + NDC.xy / 2.0f);
-}
-
-float FresnelReflectAmount(float3 normal, float3 incident, float reflectivity, float fresnelMultiplier) {
-	// TODO: Probably use a more accurate approximation than this.
-	float ret = pow(clamp(1.0f + dot(normal, incident), EPSILON, 1.0f), 5.0f);
-	return reflectivity + ((1.0 - reflectivity) * ret * fresnelMultiplier);
 }
 
 [shader("raygeneration")]
@@ -83,12 +81,17 @@ void PrimaryRayGen() {
 	float resLockMask = 0.0f;
 	float resDepth = 1.0f;
 	int resInstanceId = -1;
+	int resPickInstanceId = -1;
 	for (uint hit = 0; hit < payload.nhits; hit++) {
 		uint hitBufferIndex = getHitBufferIndex(hit, launchIndex, launchDims);
 		float4 hitColor = gHitColor[hitBufferIndex];
 		float alphaContrib = (resColor.a * hitColor.a);
 		if (alphaContrib >= EPSILON) {
 			uint instanceId = gHitInstanceId[hitBufferIndex];
+			if (resPickInstanceId < 0) {
+				resPickInstanceId = instanceId;
+			}
+
 
 			// Add the material's pixel lock along with its alpha contribution.
 			resLockMask += instanceMaterials[instanceId].lockMask * alphaContrib;
@@ -135,16 +138,16 @@ void PrimaryRayGen() {
 			// has the same problem.
 			else if (usesLighting) {
 				if (!resTransparentLightComputed) {
-					resTransparentLight = ComputeLightsRandom(launchIndex, rayDirection, instanceId, vertexPosition, vertexNormal, specular, 1, true);
+					resTransparentLight = ComputeLightsRandom(launchIndex, instanceId, vertexPosition, vertexNormal, 1, true);
 					resTransparentLightComputed = true;
 				}
 
-				resTransparent += resColorAdd * (ambientBaseColor.rgb + ambientNoGIColor.rgb + instanceMaterials[instanceId].selfLight + resTransparentLight);
+				resTransparent += resColorAdd * (ambientBaseColor.rgb + ambientNoGIColor.rgb + instanceMaterials[instanceId].selfLightColor + resTransparentLight);
 			}
 			// Cheap case: we ignore the geometry entirely from the lighting pass and just add
 			// it to the transparency buffer directly.
 			else {
-				resTransparent += resColorAdd * (ambientBaseColor.rgb + ambientNoGIColor.rgb + instanceMaterials[instanceId].selfLight);
+				resTransparent += resColorAdd * (ambientBaseColor.rgb + ambientNoGIColor.rgb + instanceMaterials[instanceId].selfLightColor);
 			}
 
 			resColor.a *= (1.0 - hitColor.a);
@@ -189,6 +192,7 @@ void PrimaryRayGen() {
 	gShadingSpecular[launchIndex] = float4(resSpecular, 0.0f);
 	gDiffuse[launchIndex] = resColor;
 	gInstanceId[launchIndex] = resInstanceId;
+	gInstanceIdPick[launchIndex] = resPickInstanceId;
 	gTransparent[launchIndex] = float4(resTransparent, 1.0f);
 	gFlow[launchIndex] = float2(-resFlow.x, resFlow.y);
 	gReactiveMask[launchIndex] = min(resReactiveMask, 0.9f);

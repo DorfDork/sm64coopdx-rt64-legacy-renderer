@@ -12,11 +12,13 @@ Texture2D<float4> gIndirectLight : register(t3);
 Texture2D<float4> gReflection : register(t4);
 Texture2D<float4> gRefraction : register(t5);
 Texture2D<float4> gTransparent : register(t6);
+Texture2D<float4> gVolumetricLight : register(t7);
 
 SamplerState gSampler : register(s0);
 
 float4 PSMain(in float4 pos : SV_Position, in float2 uv : TEXCOORD0) : SV_TARGET {
     float4 diffuse = gDiffuse.SampleLevel(gSampler, uv, 0);
+    float3 volumetricLight = volumetricLightingEnabled ? gVolumetricLight.SampleLevel(gSampler, uv, 0).rgb : float3(0.0f, 0.0f, 0.0f);
     if (diffuse.a > EPSILON) {
         float3 directLight = gDirectLight.SampleLevel(gSampler, uv, 0).rgb;
         float3 indirectLight = gIndirectLight.SampleLevel(gSampler, uv, 0).rgb;
@@ -29,9 +31,10 @@ float4 PSMain(in float4 pos : SV_Position, in float2 uv : TEXCOORD0) : SV_TARGET
         result += reflection;
         result += refraction;
         result += transparent;
+        result += volumetricLight;
         return float4(result, 1.0f);
     }
     else {
-        return float4(diffuse.rgb, 1.0f);
+        return float4(diffuse.rgb + volumetricLight, 1.0f);
     }
 }

@@ -20,6 +20,8 @@ RT64::Instance::Instance(Scene *scene) {
 	diffuseTexture = nullptr;
 	normalTexture = nullptr;
 	specularTexture = nullptr;
+	diffuse2Texture = nullptr;
+	bumpTexture = nullptr;
 	transform = XMMatrixIdentity();
 	previousTransform = XMMatrixIdentity();
 	material = DefaultMaterial;
@@ -83,7 +85,23 @@ RT64::Texture* RT64::Instance::getSpecularTexture() const {
 	return specularTexture;
 }
 
-inline XMMATRIX matrixFromFloats(float m[4][4]) {
+void RT64::Instance::setDiffuse2Texture(Texture* texture) {
+	this->diffuse2Texture = texture;
+}
+
+RT64::Texture* RT64::Instance::getDiffuse2Texture() const {
+	return diffuse2Texture;
+}
+
+void RT64::Instance::setBumpTexture(Texture* texture) {
+	this->bumpTexture = texture;
+}
+
+RT64::Texture* RT64::Instance::getBumpTexture() const {
+	return bumpTexture;
+}
+
+inline XMMATRIX matrixFromFloats(const float m[4][4]) {
 	return XMMATRIX(
 		m[0][0], m[0][1], m[0][2], m[0][3],
 		m[1][0], m[1][1], m[1][2], m[1][3],
@@ -92,7 +110,7 @@ inline XMMATRIX matrixFromFloats(float m[4][4]) {
 	);
 }
 
-void RT64::Instance::setTransform(float m[4][4]) {
+void RT64::Instance::setTransform(const float m[4][4]) {
 	transform = matrixFromFloats(m);
 }
 
@@ -100,7 +118,7 @@ XMMATRIX RT64::Instance::getTransform() const {
 	return transform;
 }
 
-void RT64::Instance::setPreviousTransform(float m[4][4]) {
+void RT64::Instance::setPreviousTransform(const float m[4][4]) {
 	previousTransform = matrixFromFloats(m);
 }
 
@@ -140,6 +158,39 @@ unsigned int RT64::Instance::getFlags() const {
 	return flags;
 }
 
+void RT64::Instance::setUniformBlocks(const RT64_SHADER_UNIFORM_BLOCK *blocks, unsigned int blockCount) {
+	uniformBlocks.clear();
+	uniformBlockData.clear();
+
+	if ((blocks == nullptr) || (blockCount == 0)) {
+		return;
+	}
+
+	for (unsigned int i = 0; i < blockCount; i++) {
+		const RT64_SHADER_UNIFORM_BLOCK &block = blocks[i];
+		if ((block.data == nullptr) || (block.size == 0) || (block.shaderRegister >= RT64_MAX_SHADER_UNIFORM_BLOCKS)) {
+			continue;
+		}
+
+		UniformBlock stored;
+		stored.shaderRegister = block.shaderRegister;
+		stored.size = block.size;
+		stored.dataOffset = (unsigned int)(uniformBlockData.size());
+		uniformBlocks.push_back(stored);
+
+		const unsigned char *bytes = (const unsigned char *)(block.data);
+		uniformBlockData.insert(uniformBlockData.end(), bytes, bytes + block.size);
+	}
+}
+
+const std::vector<RT64::Instance::UniformBlock> &RT64::Instance::getUniformBlocks() const {
+	return uniformBlocks;
+}
+
+const unsigned char *RT64::Instance::getUniformBlockData() const {
+	return uniformBlockData.data();
+}
+
 // Public
 
 DLLEXPORT RT64_INSTANCE *RT64_CreateInstance(RT64_SCENE *scenePtr) {
@@ -148,24 +199,28 @@ DLLEXPORT RT64_INSTANCE *RT64_CreateInstance(RT64_SCENE *scenePtr) {
 	return (RT64_INSTANCE *)(instance);
 }
 
-DLLEXPORT void RT64_SetInstanceDescription(RT64_INSTANCE *instancePtr, RT64_INSTANCE_DESC instanceDesc) {
+DLLEXPORT void RT64_SetInstanceDescription(RT64_INSTANCE *instancePtr, const RT64_INSTANCE_DESC *instanceDesc) {
 	assert(instancePtr != nullptr);
-	assert(instanceDesc.mesh != nullptr);
-	assert(instanceDesc.diffuseTexture != nullptr);
-	assert(instanceDesc.shader != nullptr);
+	assert(instanceDesc != nullptr);
+	assert(instanceDesc->mesh != nullptr);
+	assert(instanceDesc->diffuseTexture != nullptr);
+	assert(instanceDesc->shader != nullptr);
 
 	RT64::Instance *instance = (RT64::Instance *)(instancePtr);
-	instance->setMesh((RT64::Mesh *)(instanceDesc.mesh));
-	instance->setTransform(instanceDesc.transform.m);
-	instance->setPreviousTransform(instanceDesc.previousTransform.m);
-	instance->setMaterial(instanceDesc.material);
-	instance->setShader((RT64::Shader *)(instanceDesc.shader));
-	instance->setDiffuseTexture((RT64::Texture *)(instanceDesc.diffuseTexture));
-	instance->setNormalTexture((RT64::Texture *)(instanceDesc.normalTexture));
-	instance->setSpecularTexture((RT64::Texture *)(instanceDesc.specularTexture));
-	instance->setFlags(instanceDesc.flags);
-	instance->setScissorRect(instanceDesc.scissorRect);
-	instance->setViewportRect(instanceDesc.viewportRect);
+	instance->setMesh((RT64::Mesh *)(instanceDesc->mesh));
+	instance->setTransform(instanceDesc->transform.m);
+	instance->setPreviousTransform(instanceDesc->previousTransform.m);
+	instance->setMaterial(instanceDesc->material);
+	instance->setShader((RT64::Shader *)(instanceDesc->shader));
+	instance->setDiffuseTexture((RT64::Texture *)(instanceDesc->diffuseTexture));
+	instance->setNormalTexture((RT64::Texture *)(instanceDesc->normalTexture));
+	instance->setSpecularTexture((RT64::Texture *)(instanceDesc->specularTexture));
+	instance->setDiffuse2Texture((RT64::Texture *)(instanceDesc->diffuse2Texture));
+	instance->setBumpTexture((RT64::Texture *)(instanceDesc->bumpTexture));
+	instance->setFlags(instanceDesc->flags);
+	instance->setScissorRect(instanceDesc->scissorRect);
+	instance->setViewportRect(instanceDesc->viewportRect);
+	instance->setUniformBlocks(instanceDesc->shaderUniformBlocks, instanceDesc->shaderUniformBlockCount);
 }
 
 DLLEXPORT void RT64_DestroyInstance(RT64_INSTANCE *instancePtr) {

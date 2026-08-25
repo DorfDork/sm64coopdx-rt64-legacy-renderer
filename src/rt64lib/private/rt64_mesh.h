@@ -14,6 +14,7 @@ namespace RT64 {
 		Device *device;
 		AllocatedResource vertexBuffer;
 		AllocatedResource vertexBufferUpload;
+		UINT8 *vertexBufferUploadMapped = nullptr;
 		D3D12_VERTEX_BUFFER_VIEW d3dVertexBufferView;
 		AllocatedResource indexBuffer;
 		AllocatedResource indexBufferUpload;
@@ -29,6 +30,8 @@ namespace RT64 {
 		Mesh(Device *device, int flags);
 		virtual ~Mesh();
 		void updateVertexBuffer(void *vertexArray, int vertexCount, int vertexStride);
+		UINT8 *beginVertexBufferUpdate(int vertexCount, int vertexStride);
+		void endVertexBufferUpdate(int vertexCount, int vertexStride);
 		ID3D12Resource *getVertexBuffer() const;
 		const D3D12_VERTEX_BUFFER_VIEW *getVertexBufferView() const;
 		int getVertexCount() const;

@@ -20,6 +20,8 @@ namespace RT64 {
 		AllocatedResource lightsBuffer;
 		size_t lightsBufferSize;
 		int lightsCount;
+		std::vector<RT64_LIGHT> lastLights;
+		bool volumetricLights;
 		RT64_SCENE_DESC description;
 	public:
 		Scene(Device *device);
@@ -31,6 +33,7 @@ namespace RT64 {
 		RT64_SCENE_DESC getDescription() const;
 		void setLights(RT64_LIGHT *lightArray, int lightCount);
 		int getLightsCount() const;
+		bool getVolumetricLights() const;
 		ID3D12Resource *getLightsBuffer() const;
 		void addInstance(Instance *instance);
 		void removeInstance(Instance *instance);

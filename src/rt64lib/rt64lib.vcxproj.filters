@@ -313,6 +313,9 @@
     <CustomBuild Include="shaders\PrimaryRayGen.hlsl">
       <Filter>shaders</Filter>
     </CustomBuild>
+    <CustomBuild Include="shaders\VolumetricRayGen.hlsl">
+      <Filter>shaders</Filter>
+    </CustomBuild>
     <CustomBuild Include="shaders\DirectRayGen.hlsl">
       <Filter>shaders</Filter>
     </CustomBuild>

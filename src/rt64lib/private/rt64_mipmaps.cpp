@@ -62,6 +62,15 @@ RT64::Mipmaps::Mipmaps(Device *device) {
 	}
 }
 
+RT64::Mipmaps::~Mipmaps() {
+	for (ID3D12DescriptorHeap *&heap : d3dDescriptorHeaps) {
+		ReleaseCom(&heap);
+	}
+
+	ReleaseCom(&d3dPipelineState);
+	ReleaseCom(&d3dRootSignature);
+}
+
 void RT64::Mipmaps::generate(ID3D12Resource *resource) {
 	assert(resource != nullptr);
 

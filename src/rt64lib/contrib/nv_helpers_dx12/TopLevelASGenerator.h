@@ -98,7 +98,8 @@ public:
               UINT hitGroupIndex,/// Hit group index, corresponding the the index of the
                                  /// hit group in the Shader Binding Table that will be
                                  /// invocated upon hitting the geometry
-              UINT flags         /// Instance flags, to control face culling, etc.
+              UINT flags,        /// Instance flags, to control face culling, etc.
+              UINT instanceMask  /// Visibility mask, matched against a ray's InstanceInclusionMask
   );
 
   /// Compute the size of the scratch space required to build the acceleration
@@ -138,7 +139,8 @@ private:
   /// Helper struct storing the instance data
   struct Instance
   {
-    Instance(ID3D12Resource* blAS, const DirectX::XMMATRIX& tr, UINT iID, UINT hgId, UINT iFlags);
+    Instance(ID3D12Resource* blAS, const DirectX::XMMATRIX& tr, UINT iID, UINT hgId, UINT iFlags,
+             UINT iMask);
     /// Bottom-level AS
     ID3D12Resource* bottomLevelAS;
     /// Transform matrix
@@ -149,6 +151,8 @@ private:
     UINT hitGroupIndex;
     // Instance flags
     UINT flags;
+    // Visibility mask
+    UINT instanceMask;
   };
 
   /// Construction flags, indicating whether the AS supports iterative updates

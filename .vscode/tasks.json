@@ -1,0 +1,21 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "MSBuild Build Solution",
+            "type": "shell",
+            "command": "msbuild",
+            "args": [
+                "${workspaceFolder}/src/RT64.sln",
+                "/p:Configuration=Release",
+                "/p:Platform=x64",
+                "/p:PlatformToolset=v145"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": "$msCompile"
+        }
+    ]
+}

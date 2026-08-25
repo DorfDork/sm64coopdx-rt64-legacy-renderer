@@ -40,6 +40,7 @@ cbuffer gParams : register(b0) {
 	uint motionBlurSamples;
 	uint visualizationMode;
 	uint frameCount;
+	uint volumetricLightingEnabled;
 }
 
 #define VISUALIZATION_MODE_FINAL					0

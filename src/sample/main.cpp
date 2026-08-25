@@ -113,7 +113,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
 				RT64.lib.SetLightsInspector(RT64.inspector, RT64.lights, &RT64.lightCount, _countof(RT64.lights));
 			}
 
-			RT64_INSTANCE_DESC instDesc;
+			RT64_INSTANCE_DESC instDesc = {};
 			instDesc.scissorRect = { 0, 0, 0, 0 };
 			instDesc.viewportRect = { 0, 0, 0, 0 };
 			instDesc.mesh = RT64.mesh;
@@ -126,7 +126,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
 			instDesc.shader = RT64.shader;
 			instDesc.flags = 0;
 
-			RT64.lib.SetInstanceDescription(RT64.instance, instDesc);
+			RT64.lib.SetInstanceDescription(RT64.instance, &instDesc);
 			RT64.lib.SetSceneLights(RT64.scene, RT64.lights, RT64.lightCount);
 			RT64.lib.DrawDevice(RT64.device, 1, DeltaTimeMs);
 
@@ -201,10 +201,10 @@ RT64_TEXTURE *loadTextureDDS(const char *path) {
 void setupRT64Scene() {
 	// Setup scene.
 	RT64.scene = RT64.lib.CreateScene(RT64.device);
-	RT64.sceneDesc.ambientBaseColor = { 0.1f, 0.1f, 0.1f };
-	RT64.sceneDesc.ambientNoGIColor = { 0.2f, 0.2f, 0.2f };
-	RT64.sceneDesc.eyeLightDiffuseColor = { 0.08f, 0.08f, 0.08f };
-	RT64.sceneDesc.eyeLightSpecularColor = { 0.04f, 0.04f, 0.04f };
+	RT64.sceneDesc.ambientBaseColor = { 26.0f, 26.0f, 26.0f };
+	RT64.sceneDesc.ambientNoGIColor = { 51.0f, 51.0f, 51.0f };
+	RT64.sceneDesc.eyeLightDiffuseColor = { 20.0f, 20.0f, 20.0f };
+	RT64.sceneDesc.eyeLightSpecularColor = { 10.0f, 10.0f, 10.0f };
 	RT64.sceneDesc.skyDiffuseMultiplier = { 1.0f, 1.0f, 1.0f };
 	RT64.sceneDesc.skyHSLModifier = { 0.0f, 0.0f, 0.0f };
 	RT64.sceneDesc.skyYawOffset = 0.0f;
@@ -214,14 +214,28 @@ void setupRT64Scene() {
 
 	// Setup shader.
 	int shaderFlags = RT64_SHADER_RASTER_ENABLED | RT64_SHADER_RAYTRACE_ENABLED | RT64_SHADER_NORMAL_MAP_ENABLED | RT64_SHADER_SPECULAR_MAP_ENABLED;
-	RT64.shader = RT64.lib.CreateShader(RT64.device, 0x01200a00, RT64_SHADER_FILTER_LINEAR, RT64_SHADER_ADDRESSING_WRAP, RT64_SHADER_ADDRESSING_WRAP, shaderFlags);
+	RT64_COMBINER_DESC shaderCombiner = {};
+	shaderCombiner.rgb1[0] = RT64_CC_SHADER_0;
+	shaderCombiner.rgb1[1] = RT64_CC_SHADER_0;
+	shaderCombiner.rgb1[2] = RT64_CC_SHADER_0;
+	shaderCombiner.rgb1[3] = RT64_CC_SHADER_TEXEL0;
+	shaderCombiner.alpha1[0] = RT64_CC_SHADER_0;
+	shaderCombiner.alpha1[1] = RT64_CC_SHADER_0;
+	shaderCombiner.alpha1[2] = RT64_CC_SHADER_0;
+	shaderCombiner.alpha1[3] = RT64_CC_SHADER_INPUT_1;
+	shaderCombiner.use2Cycle = 0;
+	shaderCombiner.optAlpha = 1;
+	shaderCombiner.optTextureEdge = 0;
+	shaderCombiner.optNoise = 0;
+	RT64.shader = RT64.lib.CreateShader(RT64.device, shaderCombiner, RT64_SHADER_FILTER_LINEAR, RT64_SHADER_ADDRESSING_WRAP, RT64_SHADER_ADDRESSING_WRAP, shaderFlags);
 
 	// Setup lights.
 	RT64.lights[0].position = { 15000.0f, 30000.0f, 15000.0f };
 	RT64.lights[0].attenuationRadius = 1e9;
 	RT64.lights[0].pointRadius = 5000.0f;
-	RT64.lights[0].diffuseColor = { 0.8f, 0.75f, 0.65f };
-	RT64.lights[0].specularColor = { 0.8f, 0.75f, 0.65f };
+	RT64.lights[0].diffuseColor = { 204.0f, 191.0f, 166.0f };
+	RT64.lights[0].specularColor = { 204.0f, 191.0f, 166.0f };
+	RT64.lights[0].intensity = 1.0f;
 	RT64.lights[0].shadowOffset = 0.0f;
 	RT64.lights[0].attenuationExponent = 1.0f;
 	RT64.lightCount = 1;
@@ -296,18 +310,30 @@ void setupRT64Scene() {
 	RT64.baseMaterial.reflectionFresnelFactor = 1.0f;
 	RT64.baseMaterial.reflectionShineFactor = 0.0f;
 	RT64.baseMaterial.refractionFactor = 0.0f;
-	RT64.baseMaterial.specularColor = { 1.0f, 1.0f, 1.0f };
-	RT64.baseMaterial.specularExponent = 1.0f;
+	RT64.baseMaterial.specularColor = { 255.0f, 255.0f, 255.0f };
+	RT64.baseMaterial.specularIntensity = 1.0f;
+	RT64.baseMaterial.specularShinyness = 1.0f;
 	RT64.baseMaterial.solidAlphaMultiplier = 1.0f;
 	RT64.baseMaterial.shadowAlphaMultiplier = 1.0f;
 	RT64.baseMaterial.diffuseColorMix = { 0.0f, 0.0f, 0.0f, 0.0f };
-	RT64.baseMaterial.selfLight = { 0.0f , 0.0f, 0.0f };
+	RT64.baseMaterial.selfLightColor = { 0.0f , 0.0f, 0.0f };
+	RT64.baseMaterial.selfLightIntensity = 1.0f;
 	RT64.baseMaterial.lightGroupMaskBits = 0xFFFFFFFF;
-	RT64.baseMaterial.fogColor = { 0.3f, 0.5f, 0.7f };
+	RT64.baseMaterial.fogColor = { 77.0f, 128.0f, 179.0f };
 	RT64.baseMaterial.fogMul = 1.0f;
 	RT64.baseMaterial.fogOffset = 0.0f;
 	RT64.baseMaterial.fogEnabled = 0;
 	RT64.baseMaterial.lockMask = 0.0f;
+	RT64.baseMaterial.reflectionColor = { 255.0f, 255.0f, 255.0f };
+	RT64.baseMaterial.shadowEnabled = 1;
+	RT64.baseMaterial.shadowCenter = 0;
+	// Alias' shading model and its parameters. diffuseIntensity in particular has to be set to
+	// something: it scales the whole diffuse term, so a material left at zero takes up no light at
+	// all and the scene comes out black however it is lit.
+	RT64.baseMaterial.shadingModel = RT64_SHADING_MODEL_BLINN;
+	RT64.baseMaterial.diffuseIntensity = 1.0f;
+	RT64.baseMaterial.specularFactor = 1.0f;
+	RT64.baseMaterial.specularEccentricity = 0.3f;
 	
 	VERTEX vertices[3];
 	vertices[0].position = { -1.0f, 0.1f, 0.0f, 1.0f } ;
@@ -340,7 +366,7 @@ void setupRT64Scene() {
 	RT64_MESH* altMesh = RT64.lib.CreateMesh(RT64.device, 0);
 	RT64.lib.SetMesh(altMesh, vertices, _countof(vertices), sizeof(VERTEX), indices, _countof(indices));
 
-	RT64_INSTANCE_DESC instDesc;
+	RT64_INSTANCE_DESC instDesc = {};
 	instDesc.scissorRect = { 0, 0, 0, 0 };
 	instDesc.viewportRect = { 0, 0, 0, 0 };
 	instDesc.mesh = altMesh;
@@ -355,7 +381,7 @@ void setupRT64Scene() {
 
 	// Create HUD B Instance.
 	RT64_INSTANCE *instanceB = RT64.lib.CreateInstance(RT64.scene);
-	RT64.lib.SetInstanceDescription(instanceB, instDesc);
+	RT64.lib.SetInstanceDescription(instanceB, &instDesc);
 
 	// Create RT Instance.
 	RT64.instance = RT64.lib.CreateInstance(RT64.scene);
@@ -363,7 +389,7 @@ void setupRT64Scene() {
 	instDesc.diffuseTexture = RT64.textureDif;
 	instDesc.normalTexture = RT64.textureNrm;
 	instDesc.specularTexture = RT64.textureSpc;
-	RT64.lib.SetInstanceDescription(RT64.instance, instDesc);
+	RT64.lib.SetInstanceDescription(RT64.instance, &instDesc);
 
 	// Create HUD A Instance.
 	RT64_INSTANCE* instanceA = RT64.lib.CreateInstance(RT64.scene);
@@ -371,7 +397,7 @@ void setupRT64Scene() {
 	instDesc.normalTexture = nullptr;
 	instDesc.specularTexture = nullptr;
 	instDesc.flags = RT64_INSTANCE_RASTER_BACKGROUND;
-	RT64.lib.SetInstanceDescription(instanceA, instDesc);
+	RT64.lib.SetInstanceDescription(instanceA, &instDesc);
 
 	// Create floor.
 	VERTEX floorVertices[4];
@@ -408,7 +434,7 @@ void setupRT64Scene() {
 	instDesc.specularTexture = specularTexture;
 	instDesc.shader = RT64.shader;
 	instDesc.flags = 0;
-	RT64.lib.SetInstanceDescription(floorInstance, instDesc);
+	RT64.lib.SetInstanceDescription(floorInstance, &instDesc);
 }
 
 void destroyRT64() {

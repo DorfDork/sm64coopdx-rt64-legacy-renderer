@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|x64">
@@ -88,6 +88,7 @@
     <None Include="shaders\BlueNoise.hlsli" />
     <None Include="shaders\Color.hlsli" />
     <None Include="shaders\Constants.hlsli" />
+    <None Include="shaders\Reflection.hlsli" />
     <CustomBuild Include="shaders\DirectRayGen.hlsl">
       <FileType>Document</FileType>
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.\contrib\dxc\bin\x64\dxc.exe %(FullPath) -T lib_6_3 -Fh %(RootDir)%(Directory)%(Filename)%(Extension).h -Vn %(Filename)Blob</Command>
@@ -97,8 +98,11 @@
       <Message Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">Compiling %(Filename)%(Extension)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compiling %(Filename)%(Extension)</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(RootDir)%(Directory)%(Filename)%(Extension).h</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">shaders\BgSky.hlsli;shaders\BlueNoise.hlsli;shaders\Color.hlsli;shaders\Constants.hlsli;shaders\Fog.hlsli;shaders\GlobalBuffers.hlsli;shaders\GlobalHitBuffers.hlsli;shaders\GlobalParams.hlsli;shaders\Im3DCommon.hlsli;shaders\Instances.hlsli;shaders\Lights.hlsli;shaders\Materials.hlsli;shaders\Random.hlsli;shaders\Ray.hlsli;shaders\Textures.hlsli;shaders\UberCombiner.hlsli;shaders\UberVertexPull.hlsli</AdditionalInputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">%(RootDir)%(Directory)%(Filename)%(Extension).h</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">shaders\BgSky.hlsli;shaders\BlueNoise.hlsli;shaders\Color.hlsli;shaders\Constants.hlsli;shaders\Fog.hlsli;shaders\GlobalBuffers.hlsli;shaders\GlobalHitBuffers.hlsli;shaders\GlobalParams.hlsli;shaders\Im3DCommon.hlsli;shaders\Instances.hlsli;shaders\Lights.hlsli;shaders\Materials.hlsli;shaders\Random.hlsli;shaders\Ray.hlsli;shaders\Textures.hlsli;shaders\UberCombiner.hlsli;shaders\UberVertexPull.hlsli</AdditionalInputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(RootDir)%(Directory)%(Filename)%(Extension).h</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">shaders\BgSky.hlsli;shaders\BlueNoise.hlsli;shaders\Color.hlsli;shaders\Constants.hlsli;shaders\Fog.hlsli;shaders\GlobalBuffers.hlsli;shaders\GlobalHitBuffers.hlsli;shaders\GlobalParams.hlsli;shaders\Im3DCommon.hlsli;shaders\Instances.hlsli;shaders\Lights.hlsli;shaders\Materials.hlsli;shaders\Random.hlsli;shaders\Ray.hlsli;shaders\Textures.hlsli;shaders\UberCombiner.hlsli;shaders\UberVertexPull.hlsli</AdditionalInputs>
     </CustomBuild>
     <CustomBuild Include="shaders\IndirectRayGen.hlsl">
       <FileType>Document</FileType>
@@ -109,8 +113,11 @@
       <Message Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">Compiling %(Filename)%(Extension)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compiling %(Filename)%(Extension)</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(RootDir)%(Directory)%(Filename)%(Extension).h</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">shaders\BgSky.hlsli;shaders\BlueNoise.hlsli;shaders\Color.hlsli;shaders\Constants.hlsli;shaders\Fog.hlsli;shaders\GlobalBuffers.hlsli;shaders\GlobalHitBuffers.hlsli;shaders\GlobalParams.hlsli;shaders\Im3DCommon.hlsli;shaders\Instances.hlsli;shaders\Lights.hlsli;shaders\Materials.hlsli;shaders\Random.hlsli;shaders\Ray.hlsli;shaders\Textures.hlsli;shaders\UberCombiner.hlsli;shaders\UberVertexPull.hlsli</AdditionalInputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">%(RootDir)%(Directory)%(Filename)%(Extension).h</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">shaders\BgSky.hlsli;shaders\BlueNoise.hlsli;shaders\Color.hlsli;shaders\Constants.hlsli;shaders\Fog.hlsli;shaders\GlobalBuffers.hlsli;shaders\GlobalHitBuffers.hlsli;shaders\GlobalParams.hlsli;shaders\Im3DCommon.hlsli;shaders\Instances.hlsli;shaders\Lights.hlsli;shaders\Materials.hlsli;shaders\Random.hlsli;shaders\Ray.hlsli;shaders\Textures.hlsli;shaders\UberCombiner.hlsli;shaders\UberVertexPull.hlsli</AdditionalInputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(RootDir)%(Directory)%(Filename)%(Extension).h</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">shaders\BgSky.hlsli;shaders\BlueNoise.hlsli;shaders\Color.hlsli;shaders\Constants.hlsli;shaders\Fog.hlsli;shaders\GlobalBuffers.hlsli;shaders\GlobalHitBuffers.hlsli;shaders\GlobalParams.hlsli;shaders\Im3DCommon.hlsli;shaders\Instances.hlsli;shaders\Lights.hlsli;shaders\Materials.hlsli;shaders\Random.hlsli;shaders\Ray.hlsli;shaders\Textures.hlsli;shaders\UberCombiner.hlsli;shaders\UberVertexPull.hlsli</AdditionalInputs>
     </CustomBuild>
     <CustomBuild Include="shaders\PrimaryRayGen.hlsl">
       <FileType>Document</FileType>
@@ -121,9 +128,74 @@
       <Message Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">Compiling %(Filename)%(Extension)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compiling %(Filename)%(Extension)</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(RootDir)%(Directory)%(Filename)%(Extension).h</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">shaders\BgSky.hlsli;shaders\BlueNoise.hlsli;shaders\Color.hlsli;shaders\Constants.hlsli;shaders\Reflection.hlsli;shaders\Fog.hlsli;shaders\GlobalBuffers.hlsli;shaders\GlobalHitBuffers.hlsli;shaders\GlobalParams.hlsli;shaders\Im3DCommon.hlsli;shaders\Instances.hlsli;shaders\Lights.hlsli;shaders\Materials.hlsli;shaders\Random.hlsli;shaders\Ray.hlsli;shaders\Textures.hlsli;shaders\UberCombiner.hlsli;shaders\UberVertexPull.hlsli</AdditionalInputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">%(RootDir)%(Directory)%(Filename)%(Extension).h</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">shaders\BgSky.hlsli;shaders\BlueNoise.hlsli;shaders\Color.hlsli;shaders\Constants.hlsli;shaders\Reflection.hlsli;shaders\Fog.hlsli;shaders\GlobalBuffers.hlsli;shaders\GlobalHitBuffers.hlsli;shaders\GlobalParams.hlsli;shaders\Im3DCommon.hlsli;shaders\Instances.hlsli;shaders\Lights.hlsli;shaders\Materials.hlsli;shaders\Random.hlsli;shaders\Ray.hlsli;shaders\Textures.hlsli;shaders\UberCombiner.hlsli;shaders\UberVertexPull.hlsli</AdditionalInputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(RootDir)%(Directory)%(Filename)%(Extension).h</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">shaders\BgSky.hlsli;shaders\BlueNoise.hlsli;shaders\Color.hlsli;shaders\Constants.hlsli;shaders\Reflection.hlsli;shaders\Fog.hlsli;shaders\GlobalBuffers.hlsli;shaders\GlobalHitBuffers.hlsli;shaders\GlobalParams.hlsli;shaders\Im3DCommon.hlsli;shaders\Instances.hlsli;shaders\Lights.hlsli;shaders\Materials.hlsli;shaders\Random.hlsli;shaders\Ray.hlsli;shaders\Textures.hlsli;shaders\UberCombiner.hlsli;shaders\UberVertexPull.hlsli</AdditionalInputs>
     </CustomBuild>
+    <CustomBuild Include="shaders\UberSurfaceHit.hlsl">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.\contrib\dxc\bin\x64\dxc.exe %(FullPath) -T lib_6_3 -Fh %(RootDir)%(Directory)%(Filename)%(Extension).h -Vn %(Filename)Blob</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">.\contrib\dxc\bin\x64\dxc.exe %(FullPath) -T lib_6_3 -Fh %(RootDir)%(Directory)%(Filename)%(Extension).h -Vn %(Filename)Blob</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.\contrib\dxc\bin\x64\dxc.exe %(FullPath) -T lib_6_3 -Fh %(RootDir)%(Directory)%(Filename)%(Extension).h -Vn %(Filename)Blob</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compiling %(Filename)%(Extension)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">Compiling %(Filename)%(Extension)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compiling %(Filename)%(Extension)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(RootDir)%(Directory)%(Filename)%(Extension).h</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">shaders\BgSky.hlsli;shaders\BlueNoise.hlsli;shaders\Color.hlsli;shaders\Constants.hlsli;shaders\Fog.hlsli;shaders\GlobalBuffers.hlsli;shaders\GlobalHitBuffers.hlsli;shaders\GlobalParams.hlsli;shaders\Im3DCommon.hlsli;shaders\Instances.hlsli;shaders\Lights.hlsli;shaders\Materials.hlsli;shaders\Random.hlsli;shaders\Ray.hlsli;shaders\Textures.hlsli;shaders\UberCombiner.hlsli;shaders\UberVertexPull.hlsli</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">%(RootDir)%(Directory)%(Filename)%(Extension).h</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">shaders\BgSky.hlsli;shaders\BlueNoise.hlsli;shaders\Color.hlsli;shaders\Constants.hlsli;shaders\Fog.hlsli;shaders\GlobalBuffers.hlsli;shaders\GlobalHitBuffers.hlsli;shaders\GlobalParams.hlsli;shaders\Im3DCommon.hlsli;shaders\Instances.hlsli;shaders\Lights.hlsli;shaders\Materials.hlsli;shaders\Random.hlsli;shaders\Ray.hlsli;shaders\Textures.hlsli;shaders\UberCombiner.hlsli;shaders\UberVertexPull.hlsli</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(RootDir)%(Directory)%(Filename)%(Extension).h</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">shaders\BgSky.hlsli;shaders\BlueNoise.hlsli;shaders\Color.hlsli;shaders\Constants.hlsli;shaders\Fog.hlsli;shaders\GlobalBuffers.hlsli;shaders\GlobalHitBuffers.hlsli;shaders\GlobalParams.hlsli;shaders\Im3DCommon.hlsli;shaders\Instances.hlsli;shaders\Lights.hlsli;shaders\Materials.hlsli;shaders\Random.hlsli;shaders\Ray.hlsli;shaders\Textures.hlsli;shaders\UberCombiner.hlsli;shaders\UberVertexPull.hlsli</AdditionalInputs>
+    </CustomBuild>
+    <CustomBuild Include="shaders\UberShadowHit.hlsl">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.\contrib\dxc\bin\x64\dxc.exe %(FullPath) -T lib_6_3 -Fh %(RootDir)%(Directory)%(Filename)%(Extension).h -Vn %(Filename)Blob</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">.\contrib\dxc\bin\x64\dxc.exe %(FullPath) -T lib_6_3 -Fh %(RootDir)%(Directory)%(Filename)%(Extension).h -Vn %(Filename)Blob</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.\contrib\dxc\bin\x64\dxc.exe %(FullPath) -T lib_6_3 -Fh %(RootDir)%(Directory)%(Filename)%(Extension).h -Vn %(Filename)Blob</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compiling %(Filename)%(Extension)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">Compiling %(Filename)%(Extension)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compiling %(Filename)%(Extension)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(RootDir)%(Directory)%(Filename)%(Extension).h</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">shaders\BgSky.hlsli;shaders\BlueNoise.hlsli;shaders\Color.hlsli;shaders\Constants.hlsli;shaders\Fog.hlsli;shaders\GlobalBuffers.hlsli;shaders\GlobalHitBuffers.hlsli;shaders\GlobalParams.hlsli;shaders\Im3DCommon.hlsli;shaders\Instances.hlsli;shaders\Lights.hlsli;shaders\Materials.hlsli;shaders\Random.hlsli;shaders\Ray.hlsli;shaders\Textures.hlsli;shaders\UberCombiner.hlsli;shaders\UberVertexPull.hlsli</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">%(RootDir)%(Directory)%(Filename)%(Extension).h</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">shaders\BgSky.hlsli;shaders\BlueNoise.hlsli;shaders\Color.hlsli;shaders\Constants.hlsli;shaders\Fog.hlsli;shaders\GlobalBuffers.hlsli;shaders\GlobalHitBuffers.hlsli;shaders\GlobalParams.hlsli;shaders\Im3DCommon.hlsli;shaders\Instances.hlsli;shaders\Lights.hlsli;shaders\Materials.hlsli;shaders\Random.hlsli;shaders\Ray.hlsli;shaders\Textures.hlsli;shaders\UberCombiner.hlsli;shaders\UberVertexPull.hlsli</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(RootDir)%(Directory)%(Filename)%(Extension).h</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">shaders\BgSky.hlsli;shaders\BlueNoise.hlsli;shaders\Color.hlsli;shaders\Constants.hlsli;shaders\Fog.hlsli;shaders\GlobalBuffers.hlsli;shaders\GlobalHitBuffers.hlsli;shaders\GlobalParams.hlsli;shaders\Im3DCommon.hlsli;shaders\Instances.hlsli;shaders\Lights.hlsli;shaders\Materials.hlsli;shaders\Random.hlsli;shaders\Ray.hlsli;shaders\Textures.hlsli;shaders\UberCombiner.hlsli;shaders\UberVertexPull.hlsli</AdditionalInputs>
+    </CustomBuild>
+    <CustomBuild Include="shaders\UberRasterVS.hlsl">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.\contrib\dxc\bin\x64\dxc.exe %(FullPath) -T vs_6_3 -E UberRasterVS -Fh %(RootDir)%(Directory)%(Filename)%(Extension).h -Vn %(Filename)Blob</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">.\contrib\dxc\bin\x64\dxc.exe %(FullPath) -T vs_6_3 -E UberRasterVS -Fh %(RootDir)%(Directory)%(Filename)%(Extension).h -Vn %(Filename)Blob</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.\contrib\dxc\bin\x64\dxc.exe %(FullPath) -T vs_6_3 -E UberRasterVS -Fh %(RootDir)%(Directory)%(Filename)%(Extension).h -Vn %(Filename)Blob</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compiling %(Filename)%(Extension)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">Compiling %(Filename)%(Extension)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compiling %(Filename)%(Extension)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(RootDir)%(Directory)%(Filename)%(Extension).h</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">shaders\BgSky.hlsli;shaders\BlueNoise.hlsli;shaders\Color.hlsli;shaders\Constants.hlsli;shaders\Fog.hlsli;shaders\GlobalBuffers.hlsli;shaders\GlobalHitBuffers.hlsli;shaders\GlobalParams.hlsli;shaders\Im3DCommon.hlsli;shaders\Instances.hlsli;shaders\Lights.hlsli;shaders\Materials.hlsli;shaders\Random.hlsli;shaders\Ray.hlsli;shaders\Textures.hlsli;shaders\UberCombiner.hlsli;shaders\UberVertexPull.hlsli</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">%(RootDir)%(Directory)%(Filename)%(Extension).h</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">shaders\BgSky.hlsli;shaders\BlueNoise.hlsli;shaders\Color.hlsli;shaders\Constants.hlsli;shaders\Fog.hlsli;shaders\GlobalBuffers.hlsli;shaders\GlobalHitBuffers.hlsli;shaders\GlobalParams.hlsli;shaders\Im3DCommon.hlsli;shaders\Instances.hlsli;shaders\Lights.hlsli;shaders\Materials.hlsli;shaders\Random.hlsli;shaders\Ray.hlsli;shaders\Textures.hlsli;shaders\UberCombiner.hlsli;shaders\UberVertexPull.hlsli</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(RootDir)%(Directory)%(Filename)%(Extension).h</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">shaders\BgSky.hlsli;shaders\BlueNoise.hlsli;shaders\Color.hlsli;shaders\Constants.hlsli;shaders\Fog.hlsli;shaders\GlobalBuffers.hlsli;shaders\GlobalHitBuffers.hlsli;shaders\GlobalParams.hlsli;shaders\Im3DCommon.hlsli;shaders\Instances.hlsli;shaders\Lights.hlsli;shaders\Materials.hlsli;shaders\Random.hlsli;shaders\Ray.hlsli;shaders\Textures.hlsli;shaders\UberCombiner.hlsli;shaders\UberVertexPull.hlsli</AdditionalInputs>
+    </CustomBuild>
+    <CustomBuild Include="shaders\UberRasterPS.hlsl">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.\contrib\dxc\bin\x64\dxc.exe %(FullPath) -T ps_6_3 -E UberRasterPS -Fh %(RootDir)%(Directory)%(Filename)%(Extension).h -Vn %(Filename)Blob</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">.\contrib\dxc\bin\x64\dxc.exe %(FullPath) -T ps_6_3 -E UberRasterPS -Fh %(RootDir)%(Directory)%(Filename)%(Extension).h -Vn %(Filename)Blob</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.\contrib\dxc\bin\x64\dxc.exe %(FullPath) -T ps_6_3 -E UberRasterPS -Fh %(RootDir)%(Directory)%(Filename)%(Extension).h -Vn %(Filename)Blob</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compiling %(Filename)%(Extension)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">Compiling %(Filename)%(Extension)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compiling %(Filename)%(Extension)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(RootDir)%(Directory)%(Filename)%(Extension).h</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">shaders\BgSky.hlsli;shaders\BlueNoise.hlsli;shaders\Color.hlsli;shaders\Constants.hlsli;shaders\Fog.hlsli;shaders\GlobalBuffers.hlsli;shaders\GlobalHitBuffers.hlsli;shaders\GlobalParams.hlsli;shaders\Im3DCommon.hlsli;shaders\Instances.hlsli;shaders\Lights.hlsli;shaders\Materials.hlsli;shaders\Random.hlsli;shaders\Ray.hlsli;shaders\Textures.hlsli;shaders\UberCombiner.hlsli;shaders\UberVertexPull.hlsli</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">%(RootDir)%(Directory)%(Filename)%(Extension).h</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">shaders\BgSky.hlsli;shaders\BlueNoise.hlsli;shaders\Color.hlsli;shaders\Constants.hlsli;shaders\Fog.hlsli;shaders\GlobalBuffers.hlsli;shaders\GlobalHitBuffers.hlsli;shaders\GlobalParams.hlsli;shaders\Im3DCommon.hlsli;shaders\Instances.hlsli;shaders\Lights.hlsli;shaders\Materials.hlsli;shaders\Random.hlsli;shaders\Ray.hlsli;shaders\Textures.hlsli;shaders\UberCombiner.hlsli;shaders\UberVertexPull.hlsli</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(RootDir)%(Directory)%(Filename)%(Extension).h</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">shaders\BgSky.hlsli;shaders\BlueNoise.hlsli;shaders\Color.hlsli;shaders\Constants.hlsli;shaders\Fog.hlsli;shaders\GlobalBuffers.hlsli;shaders\GlobalHitBuffers.hlsli;shaders\GlobalParams.hlsli;shaders\Im3DCommon.hlsli;shaders\Instances.hlsli;shaders\Lights.hlsli;shaders\Materials.hlsli;shaders\Random.hlsli;shaders\Ray.hlsli;shaders\Textures.hlsli;shaders\UberCombiner.hlsli;shaders\UberVertexPull.hlsli</AdditionalInputs>
+    </CustomBuild>
+    <None Include="shaders\UberCombiner.hlsli" />
+    <None Include="shaders\UberVertexPull.hlsli" />
     <None Include="shaders\Fog.hlsli" />
     <None Include="shaders\Random.hlsli" />
     <CustomBuild Include="shaders\ReflectionRayGen.hlsl">
@@ -135,8 +207,11 @@
       <Message Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">Compiling %(Filename)%(Extension)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compiling %(Filename)%(Extension)</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(RootDir)%(Directory)%(Filename)%(Extension).h</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">shaders\BgSky.hlsli;shaders\BlueNoise.hlsli;shaders\Color.hlsli;shaders\Constants.hlsli;shaders\Fog.hlsli;shaders\GlobalBuffers.hlsli;shaders\GlobalHitBuffers.hlsli;shaders\GlobalParams.hlsli;shaders\Im3DCommon.hlsli;shaders\Instances.hlsli;shaders\Lights.hlsli;shaders\Materials.hlsli;shaders\Reflection.hlsli;shaders\Random.hlsli;shaders\Ray.hlsli;shaders\Textures.hlsli;shaders\UberCombiner.hlsli;shaders\UberVertexPull.hlsli</AdditionalInputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">%(RootDir)%(Directory)%(Filename)%(Extension).h</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">shaders\BgSky.hlsli;shaders\BlueNoise.hlsli;shaders\Color.hlsli;shaders\Constants.hlsli;shaders\Fog.hlsli;shaders\GlobalBuffers.hlsli;shaders\GlobalHitBuffers.hlsli;shaders\GlobalParams.hlsli;shaders\Im3DCommon.hlsli;shaders\Instances.hlsli;shaders\Lights.hlsli;shaders\Materials.hlsli;shaders\Reflection.hlsli;shaders\Random.hlsli;shaders\Ray.hlsli;shaders\Textures.hlsli;shaders\UberCombiner.hlsli;shaders\UberVertexPull.hlsli</AdditionalInputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(RootDir)%(Directory)%(Filename)%(Extension).h</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">shaders\BgSky.hlsli;shaders\BlueNoise.hlsli;shaders\Color.hlsli;shaders\Constants.hlsli;shaders\Fog.hlsli;shaders\GlobalBuffers.hlsli;shaders\GlobalHitBuffers.hlsli;shaders\GlobalParams.hlsli;shaders\Im3DCommon.hlsli;shaders\Instances.hlsli;shaders\Lights.hlsli;shaders\Materials.hlsli;shaders\Reflection.hlsli;shaders\Random.hlsli;shaders\Ray.hlsli;shaders\Textures.hlsli;shaders\UberCombiner.hlsli;shaders\UberVertexPull.hlsli</AdditionalInputs>
     </CustomBuild>
     <None Include="shaders\BgSky.hlsli" />
     <None Include="shaders\Textures.hlsli" />
@@ -159,8 +234,11 @@
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compiling %(Filename)%(Extension)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">Compiling %(Filename)%(Extension)</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(RootDir)%(Directory)%(Filename)%(Extension).h</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">shaders\BgSky.hlsli;shaders\BlueNoise.hlsli;shaders\Color.hlsli;shaders\Constants.hlsli;shaders\Fog.hlsli;shaders\GlobalBuffers.hlsli;shaders\GlobalHitBuffers.hlsli;shaders\GlobalParams.hlsli;shaders\Im3DCommon.hlsli;shaders\Instances.hlsli;shaders\Lights.hlsli;shaders\Materials.hlsli;shaders\Random.hlsli;shaders\Ray.hlsli;shaders\Textures.hlsli;shaders\UberCombiner.hlsli;shaders\UberVertexPull.hlsli</AdditionalInputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(RootDir)%(Directory)%(Filename)%(Extension).h</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">shaders\BgSky.hlsli;shaders\BlueNoise.hlsli;shaders\Color.hlsli;shaders\Constants.hlsli;shaders\Fog.hlsli;shaders\GlobalBuffers.hlsli;shaders\GlobalHitBuffers.hlsli;shaders\GlobalParams.hlsli;shaders\Im3DCommon.hlsli;shaders\Instances.hlsli;shaders\Lights.hlsli;shaders\Materials.hlsli;shaders\Random.hlsli;shaders\Ray.hlsli;shaders\Textures.hlsli;shaders\UberCombiner.hlsli;shaders\UberVertexPull.hlsli</AdditionalInputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">%(RootDir)%(Directory)%(Filename)%(Extension).h</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">shaders\BgSky.hlsli;shaders\BlueNoise.hlsli;shaders\Color.hlsli;shaders\Constants.hlsli;shaders\Fog.hlsli;shaders\GlobalBuffers.hlsli;shaders\GlobalHitBuffers.hlsli;shaders\GlobalParams.hlsli;shaders\Im3DCommon.hlsli;shaders\Instances.hlsli;shaders\Lights.hlsli;shaders\Materials.hlsli;shaders\Random.hlsli;shaders\Ray.hlsli;shaders\Textures.hlsli;shaders\UberCombiner.hlsli;shaders\UberVertexPull.hlsli</AdditionalInputs>
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
@@ -173,8 +251,11 @@
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compiling %(Filename)%(Extension)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">Compiling %(Filename)%(Extension)</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(RootDir)%(Directory)%(Filename)%(Extension).h</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">shaders\BgSky.hlsli;shaders\BlueNoise.hlsli;shaders\Color.hlsli;shaders\Constants.hlsli;shaders\Fog.hlsli;shaders\GlobalBuffers.hlsli;shaders\GlobalHitBuffers.hlsli;shaders\GlobalParams.hlsli;shaders\Im3DCommon.hlsli;shaders\Instances.hlsli;shaders\Lights.hlsli;shaders\Materials.hlsli;shaders\Random.hlsli;shaders\Ray.hlsli;shaders\Textures.hlsli;shaders\UberCombiner.hlsli;shaders\UberVertexPull.hlsli</AdditionalInputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(RootDir)%(Directory)%(Filename)%(Extension).h</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">shaders\BgSky.hlsli;shaders\BlueNoise.hlsli;shaders\Color.hlsli;shaders\Constants.hlsli;shaders\Fog.hlsli;shaders\GlobalBuffers.hlsli;shaders\GlobalHitBuffers.hlsli;shaders\GlobalParams.hlsli;shaders\Im3DCommon.hlsli;shaders\Instances.hlsli;shaders\Lights.hlsli;shaders\Materials.hlsli;shaders\Random.hlsli;shaders\Ray.hlsli;shaders\Textures.hlsli;shaders\UberCombiner.hlsli;shaders\UberVertexPull.hlsli</AdditionalInputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">%(RootDir)%(Directory)%(Filename)%(Extension).h</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">shaders\BgSky.hlsli;shaders\BlueNoise.hlsli;shaders\Color.hlsli;shaders\Constants.hlsli;shaders\Fog.hlsli;shaders\GlobalBuffers.hlsli;shaders\GlobalHitBuffers.hlsli;shaders\GlobalParams.hlsli;shaders\Im3DCommon.hlsli;shaders\Instances.hlsli;shaders\Lights.hlsli;shaders\Materials.hlsli;shaders\Random.hlsli;shaders\Ray.hlsli;shaders\Textures.hlsli;shaders\UberCombiner.hlsli;shaders\UberVertexPull.hlsli</AdditionalInputs>
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
@@ -187,8 +268,11 @@
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compiling %(Filename)%(Extension)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">Compiling %(Filename)%(Extension)</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(RootDir)%(Directory)%(Filename)%(Extension).h</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">shaders\BgSky.hlsli;shaders\BlueNoise.hlsli;shaders\Color.hlsli;shaders\Constants.hlsli;shaders\Fog.hlsli;shaders\GlobalBuffers.hlsli;shaders\GlobalHitBuffers.hlsli;shaders\GlobalParams.hlsli;shaders\Im3DCommon.hlsli;shaders\Instances.hlsli;shaders\Lights.hlsli;shaders\Materials.hlsli;shaders\Random.hlsli;shaders\Ray.hlsli;shaders\Textures.hlsli;shaders\UberCombiner.hlsli;shaders\UberVertexPull.hlsli</AdditionalInputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(RootDir)%(Directory)%(Filename)%(Extension).h</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">shaders\BgSky.hlsli;shaders\BlueNoise.hlsli;shaders\Color.hlsli;shaders\Constants.hlsli;shaders\Fog.hlsli;shaders\GlobalBuffers.hlsli;shaders\GlobalHitBuffers.hlsli;shaders\GlobalParams.hlsli;shaders\Im3DCommon.hlsli;shaders\Instances.hlsli;shaders\Lights.hlsli;shaders\Materials.hlsli;shaders\Random.hlsli;shaders\Ray.hlsli;shaders\Textures.hlsli;shaders\UberCombiner.hlsli;shaders\UberVertexPull.hlsli</AdditionalInputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">%(RootDir)%(Directory)%(Filename)%(Extension).h</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">shaders\BgSky.hlsli;shaders\BlueNoise.hlsli;shaders\Color.hlsli;shaders\Constants.hlsli;shaders\Fog.hlsli;shaders\GlobalBuffers.hlsli;shaders\GlobalHitBuffers.hlsli;shaders\GlobalParams.hlsli;shaders\Im3DCommon.hlsli;shaders\Instances.hlsli;shaders\Lights.hlsli;shaders\Materials.hlsli;shaders\Random.hlsli;shaders\Ray.hlsli;shaders\Textures.hlsli;shaders\UberCombiner.hlsli;shaders\UberVertexPull.hlsli</AdditionalInputs>
     </CustomBuild>
     <CustomBuild Include="shaders\Im3DGSPoints.hlsl">
       <FileType>Document</FileType>
@@ -199,8 +283,11 @@
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compiling %(Filename)%(Extension)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">Compiling %(Filename)%(Extension)</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(RootDir)%(Directory)%(Filename)%(Extension).h</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">shaders\BgSky.hlsli;shaders\BlueNoise.hlsli;shaders\Color.hlsli;shaders\Constants.hlsli;shaders\Fog.hlsli;shaders\GlobalBuffers.hlsli;shaders\GlobalHitBuffers.hlsli;shaders\GlobalParams.hlsli;shaders\Im3DCommon.hlsli;shaders\Instances.hlsli;shaders\Lights.hlsli;shaders\Materials.hlsli;shaders\Random.hlsli;shaders\Ray.hlsli;shaders\Textures.hlsli;shaders\UberCombiner.hlsli;shaders\UberVertexPull.hlsli</AdditionalInputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(RootDir)%(Directory)%(Filename)%(Extension).h</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">shaders\BgSky.hlsli;shaders\BlueNoise.hlsli;shaders\Color.hlsli;shaders\Constants.hlsli;shaders\Fog.hlsli;shaders\GlobalBuffers.hlsli;shaders\GlobalHitBuffers.hlsli;shaders\GlobalParams.hlsli;shaders\Im3DCommon.hlsli;shaders\Instances.hlsli;shaders\Lights.hlsli;shaders\Materials.hlsli;shaders\Random.hlsli;shaders\Ray.hlsli;shaders\Textures.hlsli;shaders\UberCombiner.hlsli;shaders\UberVertexPull.hlsli</AdditionalInputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">%(RootDir)%(Directory)%(Filename)%(Extension).h</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">shaders\BgSky.hlsli;shaders\BlueNoise.hlsli;shaders\Color.hlsli;shaders\Constants.hlsli;shaders\Fog.hlsli;shaders\GlobalBuffers.hlsli;shaders\GlobalHitBuffers.hlsli;shaders\GlobalParams.hlsli;shaders\Im3DCommon.hlsli;shaders\Instances.hlsli;shaders\Lights.hlsli;shaders\Materials.hlsli;shaders\Random.hlsli;shaders\Ray.hlsli;shaders\Textures.hlsli;shaders\UberCombiner.hlsli;shaders\UberVertexPull.hlsli</AdditionalInputs>
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
@@ -213,8 +300,11 @@
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compiling %(Filename)%(Extension)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">Compiling %(Filename)%(Extension)</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(RootDir)%(Directory)%(Filename)%(Extension).h</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">shaders\BgSky.hlsli;shaders\BlueNoise.hlsli;shaders\Color.hlsli;shaders\Constants.hlsli;shaders\Fog.hlsli;shaders\GlobalBuffers.hlsli;shaders\GlobalHitBuffers.hlsli;shaders\GlobalParams.hlsli;shaders\Im3DCommon.hlsli;shaders\Instances.hlsli;shaders\Lights.hlsli;shaders\Materials.hlsli;shaders\Random.hlsli;shaders\Ray.hlsli;shaders\Textures.hlsli;shaders\UberCombiner.hlsli;shaders\UberVertexPull.hlsli</AdditionalInputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(RootDir)%(Directory)%(Filename)%(Extension).h</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">shaders\BgSky.hlsli;shaders\BlueNoise.hlsli;shaders\Color.hlsli;shaders\Constants.hlsli;shaders\Fog.hlsli;shaders\GlobalBuffers.hlsli;shaders\GlobalHitBuffers.hlsli;shaders\GlobalParams.hlsli;shaders\Im3DCommon.hlsli;shaders\Instances.hlsli;shaders\Lights.hlsli;shaders\Materials.hlsli;shaders\Random.hlsli;shaders\Ray.hlsli;shaders\Textures.hlsli;shaders\UberCombiner.hlsli;shaders\UberVertexPull.hlsli</AdditionalInputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">%(RootDir)%(Directory)%(Filename)%(Extension).h</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">shaders\BgSky.hlsli;shaders\BlueNoise.hlsli;shaders\Color.hlsli;shaders\Constants.hlsli;shaders\Fog.hlsli;shaders\GlobalBuffers.hlsli;shaders\GlobalHitBuffers.hlsli;shaders\GlobalParams.hlsli;shaders\Im3DCommon.hlsli;shaders\Instances.hlsli;shaders\Lights.hlsli;shaders\Materials.hlsli;shaders\Random.hlsli;shaders\Ray.hlsli;shaders\Textures.hlsli;shaders\UberCombiner.hlsli;shaders\UberVertexPull.hlsli</AdditionalInputs>
     </CustomBuild>
     <CustomBuild Include="shaders\FullScreenVS.hlsl">
       <FileType>Document</FileType>
@@ -225,8 +315,11 @@
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compiling %(Filename)%(Extension)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">Compiling %(Filename)%(Extension)</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(RootDir)%(Directory)%(Filename)%(Extension).h</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">shaders\BgSky.hlsli;shaders\BlueNoise.hlsli;shaders\Color.hlsli;shaders\Constants.hlsli;shaders\Fog.hlsli;shaders\GlobalBuffers.hlsli;shaders\GlobalHitBuffers.hlsli;shaders\GlobalParams.hlsli;shaders\Im3DCommon.hlsli;shaders\Instances.hlsli;shaders\Lights.hlsli;shaders\Materials.hlsli;shaders\Random.hlsli;shaders\Ray.hlsli;shaders\Textures.hlsli;shaders\UberCombiner.hlsli;shaders\UberVertexPull.hlsli</AdditionalInputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(RootDir)%(Directory)%(Filename)%(Extension).h</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">shaders\BgSky.hlsli;shaders\BlueNoise.hlsli;shaders\Color.hlsli;shaders\Constants.hlsli;shaders\Fog.hlsli;shaders\GlobalBuffers.hlsli;shaders\GlobalHitBuffers.hlsli;shaders\GlobalParams.hlsli;shaders\Im3DCommon.hlsli;shaders\Instances.hlsli;shaders\Lights.hlsli;shaders\Materials.hlsli;shaders\Random.hlsli;shaders\Ray.hlsli;shaders\Textures.hlsli;shaders\UberCombiner.hlsli;shaders\UberVertexPull.hlsli</AdditionalInputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">%(RootDir)%(Directory)%(Filename)%(Extension).h</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">shaders\BgSky.hlsli;shaders\BlueNoise.hlsli;shaders\Color.hlsli;shaders\Constants.hlsli;shaders\Fog.hlsli;shaders\GlobalBuffers.hlsli;shaders\GlobalHitBuffers.hlsli;shaders\GlobalParams.hlsli;shaders\Im3DCommon.hlsli;shaders\Instances.hlsli;shaders\Lights.hlsli;shaders\Materials.hlsli;shaders\Random.hlsli;shaders\Ray.hlsli;shaders\Textures.hlsli;shaders\UberCombiner.hlsli;shaders\UberVertexPull.hlsli</AdditionalInputs>
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
@@ -239,8 +332,11 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.\contrib\dxc\bin\x64\dxc.exe %(FullPath) -T ps_5_1 -E PSMain -Fh %(RootDir)%(Directory)%(Filename)%(Extension).h -Vn %(Filename)Blob</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">.\contrib\dxc\bin\x64\dxc.exe %(FullPath) -T ps_5_1 -E PSMain -Fh %(RootDir)%(Directory)%(Filename)%(Extension).h -Vn %(Filename)Blob</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(RootDir)%(Directory)%(Filename)%(Extension).h</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">shaders\BgSky.hlsli;shaders\BlueNoise.hlsli;shaders\Color.hlsli;shaders\Constants.hlsli;shaders\Fog.hlsli;shaders\GlobalBuffers.hlsli;shaders\GlobalHitBuffers.hlsli;shaders\GlobalParams.hlsli;shaders\Im3DCommon.hlsli;shaders\Instances.hlsli;shaders\Lights.hlsli;shaders\Materials.hlsli;shaders\Random.hlsli;shaders\Ray.hlsli;shaders\Textures.hlsli;shaders\UberCombiner.hlsli;shaders\UberVertexPull.hlsli</AdditionalInputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">%(RootDir)%(Directory)%(Filename)%(Extension).h</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">shaders\BgSky.hlsli;shaders\BlueNoise.hlsli;shaders\Color.hlsli;shaders\Constants.hlsli;shaders\Fog.hlsli;shaders\GlobalBuffers.hlsli;shaders\GlobalHitBuffers.hlsli;shaders\GlobalParams.hlsli;shaders\Im3DCommon.hlsli;shaders\Instances.hlsli;shaders\Lights.hlsli;shaders\Materials.hlsli;shaders\Random.hlsli;shaders\Ray.hlsli;shaders\Textures.hlsli;shaders\UberCombiner.hlsli;shaders\UberVertexPull.hlsli</AdditionalInputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(RootDir)%(Directory)%(Filename)%(Extension).h</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">shaders\BgSky.hlsli;shaders\BlueNoise.hlsli;shaders\Color.hlsli;shaders\Constants.hlsli;shaders\Fog.hlsli;shaders\GlobalBuffers.hlsli;shaders\GlobalHitBuffers.hlsli;shaders\GlobalParams.hlsli;shaders\Im3DCommon.hlsli;shaders\Instances.hlsli;shaders\Lights.hlsli;shaders\Materials.hlsli;shaders\Random.hlsli;shaders\Ray.hlsli;shaders\Textures.hlsli;shaders\UberCombiner.hlsli;shaders\UberVertexPull.hlsli</AdditionalInputs>
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
@@ -253,8 +349,11 @@
       <Message Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">Compiling %(Filename)%(Extension)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compiling %(Filename)%(Extension)</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(RootDir)%(Directory)%(Filename)%(Extension).h</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">shaders\BgSky.hlsli;shaders\BlueNoise.hlsli;shaders\Color.hlsli;shaders\Constants.hlsli;shaders\Fog.hlsli;shaders\GlobalBuffers.hlsli;shaders\GlobalHitBuffers.hlsli;shaders\GlobalParams.hlsli;shaders\Im3DCommon.hlsli;shaders\Instances.hlsli;shaders\Lights.hlsli;shaders\Materials.hlsli;shaders\Random.hlsli;shaders\Ray.hlsli;shaders\Textures.hlsli;shaders\UberCombiner.hlsli;shaders\UberVertexPull.hlsli</AdditionalInputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">%(RootDir)%(Directory)%(Filename)%(Extension).h</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">shaders\BgSky.hlsli;shaders\BlueNoise.hlsli;shaders\Color.hlsli;shaders\Constants.hlsli;shaders\Fog.hlsli;shaders\GlobalBuffers.hlsli;shaders\GlobalHitBuffers.hlsli;shaders\GlobalParams.hlsli;shaders\Im3DCommon.hlsli;shaders\Instances.hlsli;shaders\Lights.hlsli;shaders\Materials.hlsli;shaders\Random.hlsli;shaders\Ray.hlsli;shaders\Textures.hlsli;shaders\UberCombiner.hlsli;shaders\UberVertexPull.hlsli</AdditionalInputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(RootDir)%(Directory)%(Filename)%(Extension).h</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">shaders\BgSky.hlsli;shaders\BlueNoise.hlsli;shaders\Color.hlsli;shaders\Constants.hlsli;shaders\Fog.hlsli;shaders\GlobalBuffers.hlsli;shaders\GlobalHitBuffers.hlsli;shaders\GlobalParams.hlsli;shaders\Im3DCommon.hlsli;shaders\Instances.hlsli;shaders\Lights.hlsli;shaders\Materials.hlsli;shaders\Random.hlsli;shaders\Ray.hlsli;shaders\Textures.hlsli;shaders\UberCombiner.hlsli;shaders\UberVertexPull.hlsli</AdditionalInputs>
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
@@ -267,8 +366,11 @@
       <Message Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">Compiling %(Filename)%(Extension)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compiling %(Filename)%(Extension)</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(RootDir)%(Directory)%(Filename)%(Extension).h</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">shaders\BgSky.hlsli;shaders\BlueNoise.hlsli;shaders\Color.hlsli;shaders\Constants.hlsli;shaders\Fog.hlsli;shaders\GlobalBuffers.hlsli;shaders\GlobalHitBuffers.hlsli;shaders\GlobalParams.hlsli;shaders\Im3DCommon.hlsli;shaders\Instances.hlsli;shaders\Lights.hlsli;shaders\Materials.hlsli;shaders\Random.hlsli;shaders\Ray.hlsli;shaders\Textures.hlsli;shaders\UberCombiner.hlsli;shaders\UberVertexPull.hlsli</AdditionalInputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">%(RootDir)%(Directory)%(Filename)%(Extension).h</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">shaders\BgSky.hlsli;shaders\BlueNoise.hlsli;shaders\Color.hlsli;shaders\Constants.hlsli;shaders\Fog.hlsli;shaders\GlobalBuffers.hlsli;shaders\GlobalHitBuffers.hlsli;shaders\GlobalParams.hlsli;shaders\Im3DCommon.hlsli;shaders\Instances.hlsli;shaders\Lights.hlsli;shaders\Materials.hlsli;shaders\Random.hlsli;shaders\Ray.hlsli;shaders\Textures.hlsli;shaders\UberCombiner.hlsli;shaders\UberVertexPull.hlsli</AdditionalInputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(RootDir)%(Directory)%(Filename)%(Extension).h</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">shaders\BgSky.hlsli;shaders\BlueNoise.hlsli;shaders\Color.hlsli;shaders\Constants.hlsli;shaders\Fog.hlsli;shaders\GlobalBuffers.hlsli;shaders\GlobalHitBuffers.hlsli;shaders\GlobalParams.hlsli;shaders\Im3DCommon.hlsli;shaders\Instances.hlsli;shaders\Lights.hlsli;shaders\Materials.hlsli;shaders\Random.hlsli;shaders\Ray.hlsli;shaders\Textures.hlsli;shaders\UberCombiner.hlsli;shaders\UberVertexPull.hlsli</AdditionalInputs>
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
@@ -281,8 +383,11 @@
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compiling %(Filename)%(Extension)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compiling %(Filename)%(Extension)</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">%(RootDir)%(Directory)%(Filename)%(Extension).h</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">shaders\BgSky.hlsli;shaders\BlueNoise.hlsli;shaders\Color.hlsli;shaders\Constants.hlsli;shaders\Fog.hlsli;shaders\GlobalBuffers.hlsli;shaders\GlobalHitBuffers.hlsli;shaders\GlobalParams.hlsli;shaders\Im3DCommon.hlsli;shaders\Instances.hlsli;shaders\Lights.hlsli;shaders\Materials.hlsli;shaders\Random.hlsli;shaders\Ray.hlsli;shaders\Textures.hlsli;shaders\UberCombiner.hlsli;shaders\UberVertexPull.hlsli</AdditionalInputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(RootDir)%(Directory)%(Filename)%(Extension).h</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">shaders\BgSky.hlsli;shaders\BlueNoise.hlsli;shaders\Color.hlsli;shaders\Constants.hlsli;shaders\Fog.hlsli;shaders\GlobalBuffers.hlsli;shaders\GlobalHitBuffers.hlsli;shaders\GlobalParams.hlsli;shaders\Im3DCommon.hlsli;shaders\Instances.hlsli;shaders\Lights.hlsli;shaders\Materials.hlsli;shaders\Random.hlsli;shaders\Ray.hlsli;shaders\Textures.hlsli;shaders\UberCombiner.hlsli;shaders\UberVertexPull.hlsli</AdditionalInputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(RootDir)%(Directory)%(Filename)%(Extension).h</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">shaders\BgSky.hlsli;shaders\BlueNoise.hlsli;shaders\Color.hlsli;shaders\Constants.hlsli;shaders\Fog.hlsli;shaders\GlobalBuffers.hlsli;shaders\GlobalHitBuffers.hlsli;shaders\GlobalParams.hlsli;shaders\Im3DCommon.hlsli;shaders\Instances.hlsli;shaders\Lights.hlsli;shaders\Materials.hlsli;shaders\Random.hlsli;shaders\Ray.hlsli;shaders\Textures.hlsli;shaders\UberCombiner.hlsli;shaders\UberVertexPull.hlsli</AdditionalInputs>
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
@@ -291,12 +396,32 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.\contrib\dxc\bin\x64\dxc.exe %(FullPath) -T cs_6_0 -E mainCS -Fh %(RootDir)%(Directory)%(Filename)%(Extension).h -Vn %(Filename)Blob</Command>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compiling %(Filename)%(Extension)</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(RootDir)%(Directory)%(Filename)%(Extension).h</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">shaders\BgSky.hlsli;shaders\BlueNoise.hlsli;shaders\Color.hlsli;shaders\Constants.hlsli;shaders\Fog.hlsli;shaders\GlobalBuffers.hlsli;shaders\GlobalHitBuffers.hlsli;shaders\GlobalParams.hlsli;shaders\Im3DCommon.hlsli;shaders\Instances.hlsli;shaders\Lights.hlsli;shaders\Materials.hlsli;shaders\Random.hlsli;shaders\Ray.hlsli;shaders\Textures.hlsli;shaders\UberCombiner.hlsli;shaders\UberVertexPull.hlsli</AdditionalInputs>
       <Command Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">.\contrib\dxc\bin\x64\dxc.exe %(FullPath) -T cs_6_0 -E mainCS -Fh %(RootDir)%(Directory)%(Filename)%(Extension).h -Vn %(Filename)Blob</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.\contrib\dxc\bin\x64\dxc.exe %(FullPath) -T cs_6_0 -E mainCS -Fh %(RootDir)%(Directory)%(Filename)%(Extension).h -Vn %(Filename)Blob</Command>
       <Message Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">Compiling %(Filename)%(Extension)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compiling %(Filename)%(Extension)</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">%(RootDir)%(Directory)%(Filename)%(Extension).h</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">shaders\BgSky.hlsli;shaders\BlueNoise.hlsli;shaders\Color.hlsli;shaders\Constants.hlsli;shaders\Fog.hlsli;shaders\GlobalBuffers.hlsli;shaders\GlobalHitBuffers.hlsli;shaders\GlobalParams.hlsli;shaders\Im3DCommon.hlsli;shaders\Instances.hlsli;shaders\Lights.hlsli;shaders\Materials.hlsli;shaders\Random.hlsli;shaders\Ray.hlsli;shaders\Textures.hlsli;shaders\UberCombiner.hlsli;shaders\UberVertexPull.hlsli</AdditionalInputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(RootDir)%(Directory)%(Filename)%(Extension).h</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">shaders\BgSky.hlsli;shaders\BlueNoise.hlsli;shaders\Color.hlsli;shaders\Constants.hlsli;shaders\Fog.hlsli;shaders\GlobalBuffers.hlsli;shaders\GlobalHitBuffers.hlsli;shaders\GlobalParams.hlsli;shaders\Im3DCommon.hlsli;shaders\Instances.hlsli;shaders\Lights.hlsli;shaders\Materials.hlsli;shaders\Random.hlsli;shaders\Ray.hlsli;shaders\Textures.hlsli;shaders\UberCombiner.hlsli;shaders\UberVertexPull.hlsli</AdditionalInputs>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="shaders\VolumetricRayGen.hlsl">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.\contrib\dxc\bin\x64\dxc.exe %(FullPath) -T lib_6_3 -Fh %(RootDir)%(Directory)%(Filename)%(Extension).h -Vn %(Filename)Blob</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">.\contrib\dxc\bin\x64\dxc.exe %(FullPath) -T lib_6_3 -Fh %(RootDir)%(Directory)%(Filename)%(Extension).h -Vn %(Filename)Blob</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.\contrib\dxc\bin\x64\dxc.exe %(FullPath) -T lib_6_3 -Fh %(RootDir)%(Directory)%(Filename)%(Extension).h -Vn %(Filename)Blob</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compiling %(Filename)%(Extension)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">Compiling %(Filename)%(Extension)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compiling %(Filename)%(Extension)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(RootDir)%(Directory)%(Filename)%(Extension).h</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">shaders\BgSky.hlsli;shaders\BlueNoise.hlsli;shaders\Color.hlsli;shaders\Constants.hlsli;shaders\Fog.hlsli;shaders\GlobalBuffers.hlsli;shaders\GlobalHitBuffers.hlsli;shaders\GlobalParams.hlsli;shaders\Im3DCommon.hlsli;shaders\Instances.hlsli;shaders\Lights.hlsli;shaders\Materials.hlsli;shaders\Random.hlsli;shaders\Ray.hlsli;shaders\Textures.hlsli;shaders\UberCombiner.hlsli;shaders\UberVertexPull.hlsli</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">%(RootDir)%(Directory)%(Filename)%(Extension).h</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">shaders\BgSky.hlsli;shaders\BlueNoise.hlsli;shaders\Color.hlsli;shaders\Constants.hlsli;shaders\Fog.hlsli;shaders\GlobalBuffers.hlsli;shaders\GlobalHitBuffers.hlsli;shaders\GlobalParams.hlsli;shaders\Im3DCommon.hlsli;shaders\Instances.hlsli;shaders\Lights.hlsli;shaders\Materials.hlsli;shaders\Random.hlsli;shaders\Ray.hlsli;shaders\Textures.hlsli;shaders\UberCombiner.hlsli;shaders\UberVertexPull.hlsli</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(RootDir)%(Directory)%(Filename)%(Extension).h</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">shaders\BgSky.hlsli;shaders\BlueNoise.hlsli;shaders\Color.hlsli;shaders\Constants.hlsli;shaders\Fog.hlsli;shaders\GlobalBuffers.hlsli;shaders\GlobalHitBuffers.hlsli;shaders\GlobalParams.hlsli;shaders\Im3DCommon.hlsli;shaders\Instances.hlsli;shaders\Lights.hlsli;shaders\Materials.hlsli;shaders\Random.hlsli;shaders\Ray.hlsli;shaders\Textures.hlsli;shaders\UberCombiner.hlsli;shaders\UberVertexPull.hlsli</AdditionalInputs>
     </CustomBuild>
   </ItemGroup>
   <PropertyGroup Label="Globals">

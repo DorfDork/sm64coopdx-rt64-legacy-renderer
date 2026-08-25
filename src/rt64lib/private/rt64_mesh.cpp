@@ -20,19 +20,24 @@ RT64::Mesh::Mesh(Device *device, int flags) {
 }
 
 RT64::Mesh::~Mesh() {
+	device->removePendingBarriersForResource(vertexBuffer.Get());
+	device->removePendingBarriersForResource(indexBuffer.Get());
+
 	vertexBuffer.Release();
 	vertexBufferUpload.Release();
+	vertexBufferUploadMapped = nullptr;
 	indexBuffer.Release();
 	indexBufferUpload.Release();
 	d3dBottomLevelASBuffers.Release();
 }
 
-void RT64::Mesh::updateVertexBuffer(void *vertexArray, int vertexCount, int vertexStride) {
+UINT8 *RT64::Mesh::beginVertexBufferUpdate(int vertexCount, int vertexStride) {
 	const UINT vertexBufferSize = vertexCount * vertexStride;
 
 	if (!vertexBuffer.IsNull() && ((this->vertexCount != vertexCount) || (this->vertexStride != vertexStride))) {
 		vertexBuffer.Release();
 		vertexBufferUpload.Release();
+		vertexBufferUploadMapped = nullptr;
 
 		// Discard the BLAS since it won't be compatible anymore even if it's updatable.
 		d3dBottomLevelASBuffers.Release();
@@ -44,21 +49,23 @@ void RT64::Mesh::updateVertexBuffer(void *vertexArray, int vertexCount, int vert
 
 		CD3DX12_RESOURCE_DESC bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(vertexBufferSize);
 		vertexBuffer = device->allocateResource(D3D12_HEAP_TYPE_DEFAULT, &bufferDesc, D3D12_RESOURCE_STATE_COPY_DEST, nullptr);
+
+		CD3DX12_RANGE readRange(0, 0);
+		D3D12_CHECK(vertexBufferUpload.Get()->Map(0, &readRange, reinterpret_cast<void**>(&vertexBufferUploadMapped)));
 	}
 
-	// Copy data to upload heap.
-	UINT8 *pDataBegin;
-	CD3DX12_RANGE readRange(0, 0);
-	D3D12_CHECK(vertexBufferUpload.Get()->Map(0, &readRange, reinterpret_cast<void**>(&pDataBegin)));
-	memcpy(pDataBegin, vertexArray, vertexBufferSize);
-	vertexBufferUpload.Get()->Unmap(0, nullptr);
-	
+	return vertexBufferUploadMapped;
+}
+
+void RT64::Mesh::endVertexBufferUpdate(int vertexCount, int vertexStride) {
+	const UINT vertexBufferSize = vertexCount * vertexStride;
+
 	// Copy resource to the real default resource.
 	device->getD3D12CommandList()->CopyResource(vertexBuffer.Get(), vertexBufferUpload.Get());
 
 	// Wait for the resource to finish copying before switching to generic read.
 	CD3DX12_RESOURCE_BARRIER transition = CD3DX12_RESOURCE_BARRIER::Transition(vertexBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_GENERIC_READ);
-	device->getD3D12CommandList()->ResourceBarrier(1, &transition);
+	device->addPendingBarrier(transition);
 
 	// Configure vertex buffer view.
 	d3dVertexBufferView.BufferLocation = vertexBuffer.Get()->GetGPUVirtualAddress();
@@ -68,6 +75,12 @@ void RT64::Mesh::updateVertexBuffer(void *vertexArray, int vertexCount, int vert
 	// Store the new vertex count and stride.
 	this->vertexCount = vertexCount;
 	this->vertexStride = vertexStride;
+}
+
+void RT64::Mesh::updateVertexBuffer(void *vertexArray, int vertexCount, int vertexStride) {
+	UINT8 *uploadMemory = beginVertexBufferUpdate(vertexCount, vertexStride);
+	memcpy(uploadMemory, vertexArray, (size_t)(vertexCount) * vertexStride);
+	endVertexBufferUpdate(vertexCount, vertexStride);
 }
 
 void RT64::Mesh::updateIndexBuffer(unsigned int *indexArray, int indexCount) {
@@ -95,13 +108,13 @@ void RT64::Mesh::updateIndexBuffer(unsigned int *indexArray, int indexCount) {
 	D3D12_CHECK(indexBufferUpload.Get()->Map(0, &readRange, reinterpret_cast<void **>(&pDataBegin)));
 	memcpy(pDataBegin, indexArray, indexBufferSize);
 	indexBufferUpload.Get()->Unmap(0, nullptr);
-	
+
 	// Copy resource to the real default resource.
 	device->getD3D12CommandList()->CopyResource(indexBuffer.Get(), indexBufferUpload.Get());
 
 	// Wait for the resource to finish copying before switching to generic read.
 	CD3DX12_RESOURCE_BARRIER transition = CD3DX12_RESOURCE_BARRIER::Transition(indexBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_GENERIC_READ);
-	device->getD3D12CommandList()->ResourceBarrier(1, &transition);
+	device->addPendingBarrier(transition);
 
 	// Configure index buffer view.
 	d3dIndexBufferView.BufferLocation = indexBuffer.Get()->GetGPUVirtualAddress();
@@ -126,6 +139,8 @@ void RT64::Mesh::updateBottomLevelAS() {
 }
 
 void RT64::Mesh::createBottomLevelAS(std::vector<std::pair<ID3D12Resource *, uint32_t>> vVertexBuffers, std::vector<std::pair<ID3D12Resource *, uint32_t>> vIndexBuffers) {
+	device->flushPendingBarriers();
+
 	bool updatable = flags & RT64_MESH_RAYTRACE_UPDATABLE;
 	bool fastTrace = flags & RT64_MESH_RAYTRACE_FAST_TRACE;
 	bool compact = flags & RT64_MESH_RAYTRACE_COMPACT;
@@ -200,8 +215,55 @@ DLLEXPORT void RT64_SetMesh(RT64_MESH *meshPtr, void *vertexArray, int vertexCou
 	assert(indexCount > 0);
 	RT64::Mesh *mesh = (RT64::Mesh *)(meshPtr);
 	mesh->updateVertexBuffer(vertexArray, vertexCount, vertexStride);
-	mesh->updateIndexBuffer(indexArray, indexCount);
+
+	if (mesh->getIndexCount() != indexCount) {
+		mesh->updateIndexBuffer(indexArray, indexCount);
+	}
+
 	mesh->updateBottomLevelAS();
+}
+
+DLLEXPORT void *RT64_BeginMeshVertexUpdate(RT64_MESH *meshPtr, int vertexCount, int vertexStride, unsigned int *indexArray, int indexCount) {
+	assert(meshPtr != nullptr);
+	assert(vertexCount > 0);
+	assert(indexArray != nullptr);
+	assert(indexCount > 0);
+	RT64::Mesh *mesh = (RT64::Mesh *)(meshPtr);
+
+	if (mesh->getIndexCount() != indexCount) {
+		mesh->updateIndexBuffer(indexArray, indexCount);
+	}
+
+	return mesh->beginVertexBufferUpdate(vertexCount, vertexStride);
+}
+
+DLLEXPORT void RT64_EndMeshVertexUpdate(RT64_MESH *meshPtr, int vertexCount, int vertexStride, int updateAccelerationStructure) {
+	assert(meshPtr != nullptr);
+	assert(vertexCount > 0);
+	RT64::Mesh *mesh = (RT64::Mesh *)(meshPtr);
+	mesh->endVertexBufferUpdate(vertexCount, vertexStride);
+
+	if (updateAccelerationStructure || (mesh->getBottomLevelASResult() == nullptr)) {
+		mesh->updateBottomLevelAS();
+	}
+}
+
+DLLEXPORT void RT64_SetMeshVertexData(RT64_MESH *meshPtr, void *vertexArray, int vertexCount, int vertexStride, unsigned int *indexArray, int indexCount) {
+	assert(meshPtr != nullptr);
+	assert(vertexArray != nullptr);
+	assert(vertexCount > 0);
+	assert(indexArray != nullptr);
+	assert(indexCount > 0);
+	RT64::Mesh *mesh = (RT64::Mesh *)(meshPtr);
+	mesh->updateVertexBuffer(vertexArray, vertexCount, vertexStride);
+
+	if (mesh->getIndexCount() != indexCount) {
+		mesh->updateIndexBuffer(indexArray, indexCount);
+	}
+
+	if (mesh->getBottomLevelASResult() == nullptr) {
+		mesh->updateBottomLevelAS();
+	}
 }
 
 DLLEXPORT void RT64_DestroyMesh(RT64_MESH * meshPtr) {

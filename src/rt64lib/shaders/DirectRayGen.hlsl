@@ -47,15 +47,21 @@ void DirectRayGen() {
 		historyLength = prevDirectAccum.a * historyWeight;
 	}
 
-	float3 resDirect = ComputeLightsRandom(launchIndex, rayDirection, instanceId, position.xyz, normal.xyz, specular.xyz, maxLights, true);
-	resDirect += instanceMaterials[instanceId].selfLight;
+	float3 lightsSpecularColor;
+	float3 resDirect = ComputeLightsRandom(launchIndex, instanceId, position.xyz, normal.xyz, maxLights, true, lightsSpecularColor);
+	resDirect += instanceMaterials[instanceId].selfLightColor;
 
-	// Add the eye light.
-	float specularExponent = instanceMaterials[instanceId].specularExponent;
-	float eyeLightLambertFactor = max(dot(normal.xyz, -rayDirection), 0.0f);
-	float3 eyeLightReflected = reflect(rayDirection, normal.xyz);
-	float3 eyeLightSpecularFactor = specular.rgb * pow(max(saturate(dot(eyeLightReflected, -rayDirection)), 0.0f), specularExponent);
-	resDirect += (eyeLightDiffuseColor.rgb * eyeLightLambertFactor + eyeLightSpecularColor.rgb * eyeLightSpecularFactor);
+	const float EyeLightSpecularLift = 0.5f;
+	float3 directionToEye = -rayDirection;
+	float3 directionToSpecularLight = normalize(directionToEye + float3(0.0f, EyeLightSpecularLift, 0.0f));
+	float eyeLightLambertFactor = max(dot(normal.xyz, directionToEye), 0.0f);
+	float3 specularColor = eyeLightSpecularColor.rgb + lightsSpecularColor;
+	float3 resSpecular = specularColor * ComputeSpecularTerm(instanceId, normal.xyz, directionToSpecularLight, directionToEye, specular.rgb);
+	resDirect += (eyeLightDiffuseColor.rgb * eyeLightLambertFactor + resSpecular);
+	if (instanceMaterials[instanceId].specularTint == 0) {
+		resDirect -= resSpecular;
+		gTransparent[launchIndex] += float4(resSpecular, 0.0f);
+	}
 
 	// Accumulate.
 	historyLength = min(historyLength + 1.0f, 64.0f);

@@ -15,6 +15,7 @@
 #include <vector>
 
 #include <dxgi1_4.h>
+#include <dxgi1_5.h>
 #include <d3d12.h>
 
 #include "D3D12MemoryAllocator/D3D12MemAlloc.h"
@@ -32,6 +33,12 @@ using namespace DirectX;
 #define SRV_INDEX(x) (int)(RT64::SRVIndices::x)
 #define CBV_INDEX(x) (int)(RT64::CBVIndices::x)
 #define SRV_TEXTURES_MAX 512
+#define RT64_SAMPLER_HEAP_COUNT 18
+#define RT64_CUSTOM_RASTER_MAX_TEXTURES 2
+#define RT64_INSTANCE_MASK_DEFAULT 0x01
+#define RT64_SHADOW_CENTER_GROUP_COUNT 7
+#define RT64_SHADOW_CENTER_GROUP_BIT(shadowCenter) \
+    (((shadowCenter) != 0) ? (1u << (1u + ((shadowCenter) % RT64_SHADOW_CENTER_GROUP_COUNT))) : 0u)
 
 namespace RT64 {
 	// Matches order in heap used in shader binding table.
@@ -63,6 +70,9 @@ namespace RT64 {
 		gHitNormal,
 		gHitSpecular,
 		gHitInstanceId,
+		gInstanceIdPick,
+		gVolumetricLight,
+		gPrevVolumetricLight,
 		gBackground,
 		gParams,
 		SceneBVH,
@@ -102,6 +112,9 @@ namespace RT64 {
 		gHitNormal,
 		gHitSpecular,
 		gHitInstanceId,
+		gInstanceIdPick,
+		gVolumetricLight,
+		gPrevVolumetricLight,
 		MAX
 	};
 
@@ -206,6 +219,14 @@ namespace RT64 {
 			}
 		}
 	};
+
+	template<typename T>
+	inline void ReleaseCom(T **object) {
+		if (*object != nullptr) {
+			(*object)->Release();
+			*object = nullptr;
+		}
+	}
 
 	struct InstanceTransforms {
 		XMMATRIX objectToWorld;

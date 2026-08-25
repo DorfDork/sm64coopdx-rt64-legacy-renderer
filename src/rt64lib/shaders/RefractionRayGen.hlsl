@@ -92,7 +92,7 @@ void RefractionRayGen() {
 				resInstanceId = hitInstanceId;
 			}
 			else {
-				resTransparent += hitColor.rgb * alphaContrib * (ambientBaseColor.rgb + ambientNoGIColor.rgb + instanceMaterials[hitInstanceId].selfLight);
+				resTransparent += hitColor.rgb * alphaContrib * (ambientBaseColor.rgb + ambientNoGIColor.rgb + instanceMaterials[hitInstanceId].selfLightColor);
 			}
 
 			resColor.a *= (1.0 - hitColor.a);
@@ -104,7 +104,7 @@ void RefractionRayGen() {
 	}
 
 	if (resInstanceId >= 0) {
-		float3 directLight = ComputeLightsRandom(launchIndex, rayDirection, resInstanceId, resPosition, resNormal, resSpecular, 1, true) + instanceMaterials[resInstanceId].selfLight;
+		float3 directLight = ComputeLightsRandom(launchIndex, resInstanceId, resPosition, resNormal, 1, true) + instanceMaterials[resInstanceId].selfLightColor;
 		resColor.rgb *= (ambientBaseColor.rgb + ambientNoGIColor.rgb + directLight);
 	}
 

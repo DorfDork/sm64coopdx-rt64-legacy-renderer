@@ -8,6 +8,13 @@ R"raw(
 
 #define RAY_MIN_DISTANCE					0.1f
 #define RAY_MAX_DISTANCE					100000.0f
+#define RT64_INSTANCE_MASK_DEFAULT			0x01
+#define RT64_INSTANCE_MASK_SHADOW_CENTER	0xFE
+#define RT64_INSTANCE_MASK_ALL				0xFF
+#define RT64_SHADOW_CENTER_GROUP_COUNT		7
+uint ShadowCenterGroupBit(uint shadowCenter) {
+	return (shadowCenter != 0) ? (1u << (1u + (shadowCenter % RT64_SHADOW_CENTER_GROUP_COUNT))) : 0u;
+}
 
 // Structures
 
@@ -25,6 +32,7 @@ struct HitInfo {
 
 struct ShadowHitInfo {
 	float shadowHit;
+	float nearestHitDistance;
     RayDiff rayDiff;
 };
 
@@ -72,18 +80,6 @@ void computeBarycentricDifferentials(RayDiff rayDiff, float3 rayDir, float3 edge
     dBarydx.y = dot(Lv, rayDiff.dOdx);     // dv / dx
     dBarydy.x = dot(Lu, rayDiff.dOdy);     // du / dy
     dBarydy.y = dot(Lv, rayDiff.dOdy);     // dv / dy
-}
-
-void computeNormalDifferentials(float2 dBarydx, float2 dBarydy, float3 nonNormalizedInterpolatedNormalW, float3 normalW0, float3 normalW1, float3 normalW2, out float3 dNdx, out float3 dNdy) {
-    // Differential normal (see "Normal-Interpolated Triangles" in Igehy's paper)
-    float NN = dot(nonNormalizedInterpolatedNormalW, nonNormalizedInterpolatedNormalW); // normal must be unnormalized! (otherwise NN would be 1)
-    float rcpNN = 1.0f / (NN * sqrt(NN));
-    float3 normal01 = normalW1 - normalW0;
-    float3 normal02 = normalW2 - normalW0;
-    float3 dndx = dBarydx.x * normal01 + dBarydx.y * normal02;
-    float3 dndy = dBarydy.x * normal01 + dBarydy.y * normal02;
-    dNdx = (dndx * NN - nonNormalizedInterpolatedNormalW * dot(nonNormalizedInterpolatedNormalW, dndx)) * rcpNN;
-    dNdy = (dndy * NN - nonNormalizedInterpolatedNormalW * dot(nonNormalizedInterpolatedNormalW, dndy)) * rcpNN;
 }
 
 void computeTextureDifferentials(float2 dBarydx, float2 dBarydy, float2 uv0, float2 uv1, float2 uv2, out float2 dUVdx, out float2 dUVdy) {

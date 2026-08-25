@@ -78,10 +78,13 @@ void TopLevelASGenerator::AddInstance(
     UINT hitGroupIndex,                 // Hit group index, corresponding the the index of the
                                         // hit group in the Shader Binding Table that will be
                                         // invocated upon hitting the geometry
-    UINT flags                          // Instance flags, to control face culling, etc.
+    UINT flags,                         // Instance flags, to control face culling, etc.
+    UINT instanceMask                   // Visibility mask, matched against a ray's
+                                        // InstanceInclusionMask
 )
 {
-  m_instances.emplace_back(Instance(bottomLevelAS, transform, instanceID, hitGroupIndex, flags));
+  m_instances.emplace_back(
+      Instance(bottomLevelAS, transform, instanceID, hitGroupIndex, flags, instanceMask));
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -197,9 +200,7 @@ void TopLevelASGenerator::Generate(
     memcpy(instanceDescs[i].Transform, &m, sizeof(instanceDescs[i].Transform));
     // Get access to the bottom level
     instanceDescs[i].AccelerationStructure = m_instances[i].bottomLevelAS->GetGPUVirtualAddress();
-    // Visibility mask, always visible here - TODO: should be accessible from
-    // outside
-    instanceDescs[i].InstanceMask = 0xFF;
+    instanceDescs[i].InstanceMask = m_instances[i].instanceMask;
   }
 
   descriptorsBuffer->Unmap(0, nullptr);
@@ -257,8 +258,9 @@ void TopLevelASGenerator::Generate(
 //
 //
 TopLevelASGenerator::Instance::Instance(ID3D12Resource* blAS, const DirectX::XMMATRIX& tr, UINT iID,
-                                        UINT hgId, UINT iFlags)
-    : bottomLevelAS(blAS), transform(tr), instanceID(iID), hitGroupIndex(hgId), flags(iFlags)
+                                        UINT hgId, UINT iFlags, UINT iMask)
+    : bottomLevelAS(blAS), transform(tr), instanceID(iID), hitGroupIndex(hgId), flags(iFlags),
+      instanceMask(iMask)
 {
 }
 } // namespace nv_helpers_dx12

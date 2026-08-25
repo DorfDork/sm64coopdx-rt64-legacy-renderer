@@ -34,4 +34,24 @@ const char GlobalParamsHLSLI[] =
 #include "shaders/GlobalParams.hlsli"
 ;
 
+const char UberCombinerHLSLI[] =
+#include "shaders/UberCombiner.hlsli"
+;
+
+const char UberVertexPullHLSLI[] =
+#include "shaders/UberVertexPull.hlsli"
+;
+
+const char CustomSurfaceHitHLSL[] =
+#include "shaders/CustomSurfaceHit.hlsl"
+;
+
+const char CustomShadowHitHLSL[] =
+#include "shaders/CustomShadowHit.hlsl"
+;
+
+const char CustomPostProcessPSHLSL[] =
+#include "shaders/CustomPostProcessPS.hlsl"
+;
+
 #define INCLUDE_HLSLI(x) &x[strlen("#else\n")]
