@@ -661,6 +661,9 @@ void RT64::Device::loadPipeline() {
 	allocatorDesc.pDevice = d3dDevice;
 	allocatorDesc.pAdapter = d3dAdapter;
 
+	// Keep small buffers suballocated.
+	allocatorDesc.Flags |= D3D12MA::ALLOCATOR_FLAG_DONT_PREFER_SMALL_BUFFERS_COMMITTED;
+
 	D3D12_CHECK(D3D12MA::CreateAllocator(&allocatorDesc, &d3dAllocator));
 
 	// Describe and create the command queue.

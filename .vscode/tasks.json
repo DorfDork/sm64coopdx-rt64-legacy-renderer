@@ -7,6 +7,7 @@
             "command": "msbuild",
             "args": [
                 "${workspaceFolder}/src/RT64.sln",
+                "/t:Rebuild",
                 "/p:Configuration=Release",
                 "/p:Platform=x64",
                 "/p:PlatformToolset=v145"
