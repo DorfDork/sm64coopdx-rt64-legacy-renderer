@@ -6,8 +6,8 @@
 
 #include "rt64_fsr.h"
 
-#include "fsr/include/ffx_fsr2.h"
-#include "fsr/include/dx12/ffx_fsr2_dx12.h"
+#include "FidelityFX-SDK/Kits/FidelityFX/api/include/dx12/ffx_api_dx12.hpp"
+#include "FidelityFX-SDK/Kits/FidelityFX/upscalers/include/ffx_upscale.hpp"
 
 #include "rt64_device.h"
 
@@ -17,47 +17,42 @@ class RT64::FSR::Context {
 private:
     Device *device;
     bool initialized;
-    FfxFsr2Context fsrContext;
+    ffx::Context fsrContext;
     bool fsrFilled;
-    FfxFsr2ContextDescription fsrDesc;
-    std::vector<uint8_t> fsrScratchDX12;
 public:
     Context(Device *device) {
         assert(device != nullptr);
 
         this->device = device;
-        initialized = false;
+        fsrContext = nullptr;
         fsrFilled = false;
-
-        size_t scratchSize = ffxFsr2GetScratchMemorySizeDX12();
-        fsrScratchDX12.resize(scratchSize);
-        FfxErrorCode fsrRes = ffxFsr2GetInterfaceDX12(&fsrDesc.callbacks, device->getD3D12Device(), fsrScratchDX12.data(), scratchSize);
-        if (fsrRes != FFX_OK) {
-            RT64_LOG_PRINTF("ffxFsr2GetInterfaceDX12 failed: %d\n", fsrRes);
-            return;
-        }
-
-        initialized = true;
+        initialized = (device->getD3D12Device() != nullptr);
     }
 
     ~Context() {
         release();
     }
 
-    FfxFsr2QualityMode toFSRQuality(QualityMode q) {
+    ffx::CreateBackendDX12Desc backendDesc() const {
+        ffx::CreateBackendDX12Desc desc{};
+        desc.device = device->getD3D12Device();
+        return desc;
+    }
+
+    uint32_t toFSRQuality(QualityMode q) {
         switch (q) {
         case QualityMode::UltraPerformance:
-            return FFX_FSR2_QUALITY_MODE_ULTRA_PERFORMANCE;
+            return FFX_UPSCALE_QUALITY_MODE_ULTRA_PERFORMANCE;
         case QualityMode::Performance:
-            return FFX_FSR2_QUALITY_MODE_PERFORMANCE;
+            return FFX_UPSCALE_QUALITY_MODE_PERFORMANCE;
         case QualityMode::Balanced:
-            return FFX_FSR2_QUALITY_MODE_BALANCED;
+            return FFX_UPSCALE_QUALITY_MODE_BALANCED;
         case QualityMode::Quality:
         case QualityMode::UltraQuality:
         case QualityMode::Native:
-            return FFX_FSR2_QUALITY_MODE_QUALITY;
+            return FFX_UPSCALE_QUALITY_MODE_QUALITY;
         default:
-            return FFX_FSR2_QUALITY_MODE_BALANCED;
+            return FFX_UPSCALE_QUALITY_MODE_BALANCED;
         }
     }
 
@@ -68,16 +63,15 @@ public:
 
         release();
 
-        fsrDesc.flags = FFX_FSR2_ENABLE_AUTO_EXPOSURE;
-        fsrDesc.maxRenderSize.width = renderWidth;
-        fsrDesc.maxRenderSize.height = renderHeight;
-        fsrDesc.displaySize.width = displayWidth;
-        fsrDesc.displaySize.height = displayHeight;
-        fsrDesc.device = ffxGetDeviceDX12(device->getD3D12Device());
+        ffx::CreateContextDescUpscale createDesc{};
+        createDesc.flags = FFX_UPSCALE_ENABLE_AUTO_EXPOSURE;
+        createDesc.maxRenderSize = { (uint32_t)(renderWidth), (uint32_t)(renderHeight) };
+        createDesc.maxUpscaleSize = { (uint32_t)(displayWidth), (uint32_t)(displayHeight) };
 
-        FfxErrorCode fsrRes = ffxFsr2ContextCreate(&fsrContext, &fsrDesc);
-        if (fsrRes != FFX_OK) {
-            RT64_LOG_PRINTF("ffxFsr2ContextCreate failed: %d\n", fsrRes);
+        ffx::CreateBackendDX12Desc backend = backendDesc();
+        ffx::ReturnCode retCode = ffx::CreateContext(fsrContext, nullptr, createDesc, backend);
+        if (retCode != ffx::ReturnCode::Ok) {
+            RT64_LOG_PRINTF("ffx::CreateContext failed: %d\n", (uint32_t)(retCode));
             return false;
         }
 
@@ -90,7 +84,7 @@ public:
         device->waitForGPU();
 
         if (fsrFilled) {
-            ffxFsr2ContextDestroy(&fsrContext);
+            ffx::DestroyContext(fsrContext);
             fsrFilled = false;
         }
     }
@@ -112,9 +106,17 @@ public:
         else {
             uint32_t fsrRenderWidth = 0;
             uint32_t fsrRenderHeight = 0;
-            FfxErrorCode fsrRes = ffxFsr2GetRenderResolutionFromQualityMode(&fsrRenderWidth, &fsrRenderHeight, displayWidth, displayHeight, toFSRQuality(quality));
-            if (fsrRes != FFX_OK) {
-                RT64_LOG_PRINTF("ffxFsr2GetRenderResolutionFromQualityMode failed: %d\n", fsrRes);
+            ffx::QueryDescUpscaleGetRenderResolutionFromQualityMode getRes{};
+            getRes.displayWidth = displayWidth;
+            getRes.displayHeight = displayHeight;
+            getRes.qualityMode = toFSRQuality(quality);
+            getRes.pOutRenderWidth = &fsrRenderWidth;
+            getRes.pOutRenderHeight = &fsrRenderHeight;
+
+            ffx::CreateBackendDX12Desc backend = backendDesc();
+            ffx::ReturnCode retCode = ffx::Query(getRes, backend);
+            if (retCode != ffx::ReturnCode::Ok) {
+                RT64_LOG_PRINTF("ffx::Query (GetRenderResolutionFromQualityMode) failed: %d\n", (uint32_t)(retCode));
                 return false;
             }
 
@@ -125,26 +127,36 @@ public:
         return true;
     }
 
-    uint32_t getJitterPhaseCount(int renderWidth, int displayWidth) {
-        return ffxFsr2GetJitterPhaseCount(renderWidth, displayWidth);
+    int getJitterPhaseCount(int renderWidth, int displayWidth) {
+        int32_t phaseCount = 0;
+        ffx::QueryDescUpscaleGetJitterPhaseCount getPhase{};
+        getPhase.renderWidth = renderWidth;
+        getPhase.displayWidth = displayWidth;
+        getPhase.pOutPhaseCount = &phaseCount;
+
+        ffx::CreateBackendDX12Desc backend = backendDesc();
+        ffx::ReturnCode retCode = ffx::Query(getPhase, backend);
+        if (retCode != ffx::ReturnCode::Ok) {
+            RT64_LOG_PRINTF("ffx::Query (GetJitterPhaseCount) failed: %d\n", (uint32_t)(retCode));
+        }
+
+        return phaseCount;
     }
 
     void upscale(const UpscaleParameters &p) {
-        FfxFsr2DispatchDescription dispatchDesc = { 0 };
-        dispatchDesc.commandList = ffxGetCommandListDX12(device->getD3D12CommandList());
-        dispatchDesc.color = ffxGetResourceDX12(&fsrContext, p.inColor, L"inColor");
-        dispatchDesc.depth = ffxGetResourceDX12(&fsrContext, p.inDepth, L"inDepth");
-        dispatchDesc.motionVectors = ffxGetResourceDX12(&fsrContext, p.inFlow, L"inFlow");
-        dispatchDesc.exposure = ffxGetResourceDX12(&fsrContext, nullptr, L"inExposure");
-        dispatchDesc.reactive = ffxGetResourceDX12(&fsrContext, p.inReactiveMask, L"inReactive");
-        dispatchDesc.transparencyAndComposition = ffxGetResourceDX12(&fsrContext, p.inLockMask, L"inTransparencyAndComposition");
-        dispatchDesc.output = ffxGetResourceDX12(&fsrContext, p.outColor, L"outColor", FFX_RESOURCE_STATE_UNORDERED_ACCESS);
-        dispatchDesc.jitterOffset.x = p.jitterX;
-        dispatchDesc.jitterOffset.y = p.jitterY;
+        ffx::DispatchDescUpscale dispatchDesc{};
+        dispatchDesc.commandList = device->getD3D12CommandList();
+        dispatchDesc.color = ffxApiGetResourceDX12(p.inColor, FFX_API_RESOURCE_STATE_COMPUTE_READ);
+        dispatchDesc.depth = ffxApiGetResourceDX12(p.inDepth, FFX_API_RESOURCE_STATE_COMPUTE_READ);
+        dispatchDesc.motionVectors = ffxApiGetResourceDX12(p.inFlow, FFX_API_RESOURCE_STATE_COMPUTE_READ);
+        dispatchDesc.exposure = ffxApiGetResourceDX12(nullptr);
+        dispatchDesc.reactive = ffxApiGetResourceDX12(p.inReactiveMask, FFX_API_RESOURCE_STATE_COMPUTE_READ);
+        dispatchDesc.transparencyAndComposition = ffxApiGetResourceDX12(p.inLockMask, FFX_API_RESOURCE_STATE_COMPUTE_READ);
+        dispatchDesc.output = ffxApiGetResourceDX12(p.outColor, FFX_API_RESOURCE_STATE_UNORDERED_ACCESS);
+        dispatchDesc.jitterOffset = { p.jitterX, p.jitterY };
         dispatchDesc.motionVectorScale = { 1.0f, 1.0f };
         dispatchDesc.reset = p.resetAccumulation;
-        dispatchDesc.renderSize.width = p.inRect.w;
-        dispatchDesc.renderSize.height = p.inRect.h;
+        dispatchDesc.renderSize = { (uint32_t)(p.inRect.w), (uint32_t)(p.inRect.h) };
         dispatchDesc.enableSharpening = (p.sharpness > 0.0f);
         dispatchDesc.sharpness = p.sharpness;
         dispatchDesc.frameTimeDelta = p.deltaTime;
@@ -153,15 +165,11 @@ public:
         dispatchDesc.cameraFar = p.farPlane;
         dispatchDesc.cameraFovAngleVertical = p.fovY;
         dispatchDesc.viewSpaceToMetersFactor = 1.0f;
-        dispatchDesc.enableAutoReactive = false;
-        dispatchDesc.autoTcThreshold = 1.0f;
-        dispatchDesc.autoTcScale = 1.0f;
-        dispatchDesc.autoReactiveScale = 1.0f;
-        dispatchDesc.autoReactiveMax = 1.0f;
+        dispatchDesc.flags = 0;
 
-        FfxErrorCode fsrRes = ffxFsr2ContextDispatch(&fsrContext, &dispatchDesc);
-        if (fsrRes != FFX_OK) {
-            RT64_LOG_PRINTF("ffxFsr2ContextDispatch failed: %d\n", fsrRes);
+        ffx::ReturnCode retCode = ffx::Dispatch(fsrContext, dispatchDesc);
+        if (retCode != ffx::ReturnCode::Ok) {
+            RT64_LOG_PRINTF("ffx::Dispatch failed: %d\n", (uint32_t)(retCode));
         }
     }
 
