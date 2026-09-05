@@ -16,6 +16,7 @@
 *.idb
 *.hlsl.h
 *.bat
+!src/rt64lib/contrib/BuildNRD.bat
 imgui.ini
 *.obj
 *.pdb

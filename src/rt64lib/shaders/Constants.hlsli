@@ -6,3 +6,4 @@
 #define M_PI								3.14159265f
 #define M_TWO_PI							(M_PI * 2.0f)
 #define APPLY_LIGHTS_MINIMUM_ALPHA			0.5
+#define NRD_SKY_VIEWZ						1.0e6f

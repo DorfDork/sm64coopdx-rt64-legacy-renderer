@@ -14,6 +14,7 @@
 #include "Textures.hlsli"
 #include "Lights.hlsli"
 #include "BgSky.hlsli"
+#include "NRD.hlsli"
 
 float3 getCosHemisphereSampleBlueNoise(uint2 pixelPos, uint frameCount, float3 hitNorm) {
 	float2 randVal = getBlueNoise(pixelPos, frameCount).rg;
@@ -36,24 +37,8 @@ void IndirectRayGen() {
 		uint2 launchDims = DispatchRaysDimensions().xy;
 		float3 rayOrigin = gShadingPosition[launchIndex].xyz;
 		float3 shadingNormal = gShadingNormal[launchIndex].xyz;
-		float3 newIndirect = float3(0.0f, 0.0f, 0.0f);
-		float historyLength = 0.0f;
-
-		// Reproject previous indirect.
-		if (giReproject) {
-			const float WeightNormalExponent = 128.0f;
-			float2 flow = gFlow[launchIndex].xy;
-			int2 prevIndex = int2(launchIndex + float2(0.5f, 0.5f) + flow);
-			float prevDepth = gPrevDepth[prevIndex];
-			float3 prevNormal = gPrevNormal[prevIndex].xyz;
-			float4 prevIndirectAccum = gPrevIndirectLightAccum[prevIndex];
-			float depth = gDepth[launchIndex];
-			float weightDepth = abs(depth - prevDepth) / 0.01f;
-			float weightNormal = pow(max(0.0f, dot(prevNormal, shadingNormal)), WeightNormalExponent);
-			float historyWeight = exp(-weightDepth) * weightNormal;
-			newIndirect = prevIndirectAccum.rgb;
-			historyLength = prevIndirectAccum.a * historyWeight;
-		}
+		float3 resIndirectSum = float3(0.0f, 0.0f, 0.0f);
+		float hitDistSum = 0.0f;
 
 		uint maxSamples = giSamples;
 		const uint blueNoiseMult = 64 / giSamples;
@@ -86,7 +71,6 @@ void IndirectRayGen() {
 			// Process hits.
 			float3 resPosition = float3(0.0f, 0.0f, 0.0f);
 			float3 resNormal = float3(0.0f, 0.0f, 0.0f);
-			float3 resSpecular = float3(0.0f, 0.0f, 0.0f);
 			float4 resColor = float4(0, 0, 0, 1);
 			int resInstanceId = -1;
 			for (uint hit = 0; hit < payload.nhits; hit++) {
@@ -97,13 +81,10 @@ void IndirectRayGen() {
 					uint instanceId = gHitInstanceId[hitBufferIndex];
 					float3 vertexPosition = rayOrigin + rayDirection * WithoutDistanceBias(gHitDistAndFlow[hitBufferIndex].x, instanceId);
 					float3 vertexNormal = gHitNormal[hitBufferIndex].xyz;
-					float3 vertexSpecular = gHitSpecular[hitBufferIndex].rgb;
-					float3 specular = instanceMaterials[instanceId].specularColor * vertexSpecular.rgb;
 					resColor.rgb += hitColor.rgb * alphaContrib;
 					resColor.a *= (1.0 - hitColor.a);
 					resPosition = vertexPosition;
 					resNormal = vertexNormal;
-					resSpecular = specular;
 					resInstanceId = instanceId;
 				}
 
@@ -114,24 +95,28 @@ void IndirectRayGen() {
 
 			// Add diffuse bounce as indirect light.
 			float3 resIndirect = ambientBaseColor.rgb;
+			float sampleHitDist = RAY_MAX_DISTANCE;
 			if (resInstanceId >= 0) {
 				float3 directLight = ComputeLightsRandom(launchIndex, resInstanceId, resPosition, resNormal, 1, true) + instanceMaterials[resInstanceId].selfLightColor;
 				float3 indirectLight = resColor.rgb * (1.0f - resColor.a) * (ambientBaseColor.rgb + ambientNoGIColor.rgb + directLight) * giDiffuseStrength;
 				resIndirect += indirectLight;
+				sampleHitDist = length(resPosition - rayOrigin);
 			}
 
 			resIndirect += bgColor * giSkyStrength * resColor.a;
 
-			// Accumulate.
-			historyLength = min(historyLength + 1.0f, 64.0f);
-			newIndirect = lerp(newIndirect.rgb, resIndirect, 1.0f / historyLength);
+			// NRD handles all temporal accumulation
+			resIndirectSum += resIndirect / giSamples;
+			hitDistSum += sampleHitDist / giSamples;
 
 			maxSamples--;
 		}
-		
-		gIndirectLightAccum[launchIndex] = float4(newIndirect, historyLength);
+
+		float viewZ = gViewZ[launchIndex];
+		float normHitDist = REBLUR_FrontEnd_GetNormHitDist(hitDistSum, viewZ, diffuseHitDistParams.xyz, 1.0f);
+		gIndirectRadianceHitDist[launchIndex] = REBLUR_FrontEnd_PackRadianceAndNormHitDist(resIndirectSum, normHitDist, true);
 	}
 	else {
-		gIndirectLightAccum[launchIndex] = float4(ambientBaseColor.rgb + ambientNoGIColor.rgb, 0.0f);
+		gIndirectRadianceHitDist[launchIndex] = REBLUR_FrontEnd_PackRadianceAndNormHitDist(ambientBaseColor.rgb + ambientNoGIColor.rgb, 0.0f, true);
 	}
 }

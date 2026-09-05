@@ -185,8 +185,8 @@ void UberSurfaceAnyHit(inout HitInfo payload, Attributes attrib) {
 		}
 	}
 
-	float3 prevWorldPos = mul(instanceTransforms[instanceId].objectToWorldPrevious, float4(vertexPosition, 1.0f));
-	float3 curWorldPos = mul(instanceTransforms[instanceId].objectToWorld, float4(vertexPosition, 1.0f));
+	float3 prevWorldPos = mul(instanceTransforms[instanceId].objectToWorldPrevious, float4(vertexPosition, 1.0f)).xyz;
+	float3 curWorldPos = mul(instanceTransforms[instanceId].objectToWorld, float4(vertexPosition, 1.0f)).xyz;
 	float3 vertexFlow = curWorldPos - prevWorldPos;
 	float3 vertexSpecular = float3(1.0f, 1.0f, 1.0f);
 	if (hasSpecularMap) {

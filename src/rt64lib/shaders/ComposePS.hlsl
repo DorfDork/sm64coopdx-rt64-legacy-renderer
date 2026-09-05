@@ -4,6 +4,7 @@
 
 #include "Constants.hlsli"
 #include "GlobalParams.hlsli"
+#include "NRD.hlsli"
 
 Texture2D<float4> gFlow : register(t0);
 Texture2D<float4> gDiffuse : register(t1);
@@ -20,8 +21,8 @@ float4 PSMain(in float4 pos : SV_Position, in float2 uv : TEXCOORD0) : SV_TARGET
     float4 diffuse = gDiffuse.SampleLevel(gSampler, uv, 0);
     float3 volumetricLight = volumetricLightingEnabled ? gVolumetricLight.SampleLevel(gSampler, uv, 0).rgb : float3(0.0f, 0.0f, 0.0f);
     if (diffuse.a > EPSILON) {
-        float3 directLight = gDirectLight.SampleLevel(gSampler, uv, 0).rgb;
-        float3 indirectLight = gIndirectLight.SampleLevel(gSampler, uv, 0).rgb;
+        float3 directLight = REBLUR_BackEnd_UnpackRadianceAndNormHitDist(gDirectLight.SampleLevel(gSampler, uv, 0)).rgb;
+        float3 indirectLight = REBLUR_BackEnd_UnpackRadianceAndNormHitDist(gIndirectLight.SampleLevel(gSampler, uv, 0)).rgb;
         float3 reflection = gReflection.SampleLevel(gSampler, uv, 0).rgb;
         float3 refraction = gRefraction.SampleLevel(gSampler, uv, 0).rgb;
         float3 transparent = gTransparent.SampleLevel(gSampler, uv, 0).rgb;

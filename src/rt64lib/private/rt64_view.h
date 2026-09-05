@@ -6,6 +6,7 @@
 
 #include "rt64_common.h"
 
+#include <cstddef>
 #include <map>
 
 #include "nv_helpers_dx12/TopLevelASGenerator.h"
@@ -14,6 +15,7 @@
 #include "rt64_dlss.h"
 #include "rt64_fsr.h"
 #include "rt64_xess.h"
+#include "rt64_nrd.h"
 
 namespace RT64 {
 	class Scene;
@@ -44,6 +46,7 @@ namespace RT64 {
 		struct GlobalParamsBuffer {
 			XMMATRIX view;
 			XMMATRIX viewI;
+			XMMATRIX prevView;
 			XMMATRIX prevViewI;
 			XMMATRIX projection;
 			XMMATRIX projectionI;
@@ -69,15 +72,17 @@ namespace RT64 {
 			unsigned int randomSeed;
 			unsigned int diSamples;
 			unsigned int giSamples;
-			unsigned int diReproject;
-			unsigned int giReproject;
 			unsigned int binaryLockMask;
 			unsigned int maxLights;
 			unsigned int motionBlurSamples;
 			unsigned int visualizationMode;
 			unsigned int frameCount;
 			unsigned int volumetricLightingEnabled;
+			RT64_VECTOR4 diffuseHitDistParams;
 		};
+
+		static_assert(offsetof(GlobalParamsBuffer, diffuseHitDistParams) % 16 == 0,
+			"GlobalParamsBuffer.diffuseHitDistParams must stay 16-byte aligned to match HLSL cbuffer packing");
 
 		Scene *scene;
 		float fovRadians;
@@ -102,10 +107,13 @@ namespace RT64 {
 		AllocatedResource rtInstanceId;
 		AllocatedResource rtInstanceIdPick;
 		AllocatedResource rtInstanceIdPickReadback;
-		AllocatedResource rtDirectLightAccum[2];
-		AllocatedResource rtFilteredDirectLight[2];
-		AllocatedResource rtIndirectLightAccum[2];
-		AllocatedResource rtFilteredIndirectLight[2];
+		AllocatedResource rtDirectRadianceHitDist;
+		AllocatedResource rtIndirectRadianceHitDist;
+		AllocatedResource rtDenoisedDirect;
+		AllocatedResource rtDenoisedIndirect;
+		AllocatedResource rtNormalRoughness;
+		AllocatedResource rtViewZ;
+		AllocatedResource rtHistoryConfidence;
 		AllocatedResource rtReflection;
 		AllocatedResource rtRefraction;
 		AllocatedResource rtTransparent;
@@ -144,13 +152,9 @@ namespace RT64 {
 		ID3D12DescriptorHeap *samplerHeap;
 		ID3D12DescriptorHeap *composeHeap;
 		ID3D12DescriptorHeap *postProcessHeap;
-		ID3D12DescriptorHeap *directFilterHeaps[2];
-		ID3D12DescriptorHeap *indirectFilterHeaps[2];
 		ID3D12DescriptorHeap *volumetricFilterHeaps[2];
 		UINT outputBufferGeneration;
 		UINT composeHeapGeneration;
-		UINT directFilterHeapsGeneration[2];
-		UINT indirectFilterHeapsGeneration[2];
 		UINT volumetricFilterHeapsGeneration[2];
 		nv_helpers_dx12::ShaderBindingTableGenerator sbtHelper;
 		AllocatedResource sbtStorage;
@@ -160,6 +164,7 @@ namespace RT64 {
 		uint8_t *globalParamBufferResourceMapped;
 		GlobalParamsBuffer globalParamsBufferData;
 		uint32_t globalParamsBufferSize;
+		RT64_VECTOR2 prevPixelJitter;
 		AllocatedResource filterParamBufferResource;
 		uint8_t *filterParamBufferResourceMapped;
 		uint32_t filterParamBufferSize;
@@ -207,6 +212,8 @@ namespace RT64 {
 		bool upscalerReactiveMask;
 		bool upscalerLockMask;
 
+		Denoiser *nrdDenoiser;
+
 		void createOutputBuffers();
 		void releaseOutputBuffers();
 		void createInstanceTransformsBuffer();
@@ -222,6 +229,7 @@ namespace RT64 {
 		float getProjectionAspectRatio() const;
 		void createGlobalParamsBuffer();
 		void updateGlobalParamsBuffer();
+		void denoiseLighting(const std::vector<ID3D12DescriptorHeap *> &heaps, float deltaTimeMs);
 		void createFilterParamsBuffer();
 		void updateFilterParamsBuffer();
 	public:

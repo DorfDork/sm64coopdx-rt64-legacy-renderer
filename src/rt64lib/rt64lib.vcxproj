@@ -42,6 +42,7 @@
     <ClInclude Include="private\rt64_instance.h" />
     <ClInclude Include="private\rt64_mesh.h" />
     <ClInclude Include="private\rt64_mipmaps.h" />
+    <ClInclude Include="private\rt64_nrd.h" />
     <ClInclude Include="private\rt64_scene.h" />
     <ClInclude Include="private\rt64_shader.h" />
     <ClInclude Include="private\rt64_shader_hlsli.h" />
@@ -76,6 +77,7 @@
     <ClCompile Include="private\rt64_instance.cpp" />
     <ClCompile Include="private\rt64_mesh.cpp" />
     <ClCompile Include="private\rt64_mipmaps.cpp" />
+    <ClCompile Include="private\rt64_nrd.cpp" />
     <ClCompile Include="private\rt64_optimus.cpp" />
     <ClCompile Include="private\rt64_scene.cpp" />
     <ClCompile Include="private\rt64_shader.cpp" />
@@ -91,48 +93,48 @@
     <None Include="shaders\Reflection.hlsli" />
     <CustomBuild Include="shaders\DirectRayGen.hlsl">
       <FileType>Document</FileType>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.\contrib\dxc\bin\x64\dxc.exe %(FullPath) -T lib_6_3 -Fh %(RootDir)%(Directory)%(Filename)%(Extension).h -Vn %(Filename)Blob</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">.\contrib\dxc\bin\x64\dxc.exe %(FullPath) -T lib_6_3 -Fh %(RootDir)%(Directory)%(Filename)%(Extension).h -Vn %(Filename)Blob</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.\contrib\dxc\bin\x64\dxc.exe %(FullPath) -T lib_6_3 -Fh %(RootDir)%(Directory)%(Filename)%(Extension).h -Vn %(Filename)Blob</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.\contrib\dxc\bin\x64\dxc.exe %(FullPath) -T lib_6_3 -I .\contrib\NRD\Shaders -Fh %(RootDir)%(Directory)%(Filename)%(Extension).h -Vn %(Filename)Blob</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">.\contrib\dxc\bin\x64\dxc.exe %(FullPath) -T lib_6_3 -I .\contrib\NRD\Shaders -Fh %(RootDir)%(Directory)%(Filename)%(Extension).h -Vn %(Filename)Blob</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.\contrib\dxc\bin\x64\dxc.exe %(FullPath) -T lib_6_3 -I .\contrib\NRD\Shaders -Fh %(RootDir)%(Directory)%(Filename)%(Extension).h -Vn %(Filename)Blob</Command>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compiling %(Filename)%(Extension)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">Compiling %(Filename)%(Extension)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compiling %(Filename)%(Extension)</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(RootDir)%(Directory)%(Filename)%(Extension).h</Outputs>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">shaders\BgSky.hlsli;shaders\BlueNoise.hlsli;shaders\Color.hlsli;shaders\Constants.hlsli;shaders\Fog.hlsli;shaders\GlobalBuffers.hlsli;shaders\GlobalHitBuffers.hlsli;shaders\GlobalParams.hlsli;shaders\Im3DCommon.hlsli;shaders\Instances.hlsli;shaders\Lights.hlsli;shaders\Materials.hlsli;shaders\Random.hlsli;shaders\Ray.hlsli;shaders\Textures.hlsli;shaders\UberCombiner.hlsli;shaders\UberVertexPull.hlsli</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">shaders\BgSky.hlsli;shaders\BlueNoise.hlsli;shaders\Color.hlsli;shaders\Constants.hlsli;shaders\Fog.hlsli;shaders\GlobalBuffers.hlsli;shaders\GlobalHitBuffers.hlsli;shaders\GlobalParams.hlsli;shaders\Im3DCommon.hlsli;shaders\Instances.hlsli;shaders\Lights.hlsli;shaders\Materials.hlsli;shaders\Random.hlsli;shaders\Ray.hlsli;shaders\Textures.hlsli;shaders\UberCombiner.hlsli;shaders\UberVertexPull.hlsli;contrib\NRD\Shaders\NRD.hlsli</AdditionalInputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">%(RootDir)%(Directory)%(Filename)%(Extension).h</Outputs>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">shaders\BgSky.hlsli;shaders\BlueNoise.hlsli;shaders\Color.hlsli;shaders\Constants.hlsli;shaders\Fog.hlsli;shaders\GlobalBuffers.hlsli;shaders\GlobalHitBuffers.hlsli;shaders\GlobalParams.hlsli;shaders\Im3DCommon.hlsli;shaders\Instances.hlsli;shaders\Lights.hlsli;shaders\Materials.hlsli;shaders\Random.hlsli;shaders\Ray.hlsli;shaders\Textures.hlsli;shaders\UberCombiner.hlsli;shaders\UberVertexPull.hlsli</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">shaders\BgSky.hlsli;shaders\BlueNoise.hlsli;shaders\Color.hlsli;shaders\Constants.hlsli;shaders\Fog.hlsli;shaders\GlobalBuffers.hlsli;shaders\GlobalHitBuffers.hlsli;shaders\GlobalParams.hlsli;shaders\Im3DCommon.hlsli;shaders\Instances.hlsli;shaders\Lights.hlsli;shaders\Materials.hlsli;shaders\Random.hlsli;shaders\Ray.hlsli;shaders\Textures.hlsli;shaders\UberCombiner.hlsli;shaders\UberVertexPull.hlsli;contrib\NRD\Shaders\NRD.hlsli</AdditionalInputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(RootDir)%(Directory)%(Filename)%(Extension).h</Outputs>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">shaders\BgSky.hlsli;shaders\BlueNoise.hlsli;shaders\Color.hlsli;shaders\Constants.hlsli;shaders\Fog.hlsli;shaders\GlobalBuffers.hlsli;shaders\GlobalHitBuffers.hlsli;shaders\GlobalParams.hlsli;shaders\Im3DCommon.hlsli;shaders\Instances.hlsli;shaders\Lights.hlsli;shaders\Materials.hlsli;shaders\Random.hlsli;shaders\Ray.hlsli;shaders\Textures.hlsli;shaders\UberCombiner.hlsli;shaders\UberVertexPull.hlsli</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">shaders\BgSky.hlsli;shaders\BlueNoise.hlsli;shaders\Color.hlsli;shaders\Constants.hlsli;shaders\Fog.hlsli;shaders\GlobalBuffers.hlsli;shaders\GlobalHitBuffers.hlsli;shaders\GlobalParams.hlsli;shaders\Im3DCommon.hlsli;shaders\Instances.hlsli;shaders\Lights.hlsli;shaders\Materials.hlsli;shaders\Random.hlsli;shaders\Ray.hlsli;shaders\Textures.hlsli;shaders\UberCombiner.hlsli;shaders\UberVertexPull.hlsli;contrib\NRD\Shaders\NRD.hlsli</AdditionalInputs>
     </CustomBuild>
     <CustomBuild Include="shaders\IndirectRayGen.hlsl">
       <FileType>Document</FileType>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.\contrib\dxc\bin\x64\dxc.exe %(FullPath) -T lib_6_3 -Fh %(RootDir)%(Directory)%(Filename)%(Extension).h -Vn %(Filename)Blob</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">.\contrib\dxc\bin\x64\dxc.exe %(FullPath) -T lib_6_3 -Fh %(RootDir)%(Directory)%(Filename)%(Extension).h -Vn %(Filename)Blob</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.\contrib\dxc\bin\x64\dxc.exe %(FullPath) -T lib_6_3 -Fh %(RootDir)%(Directory)%(Filename)%(Extension).h -Vn %(Filename)Blob</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.\contrib\dxc\bin\x64\dxc.exe %(FullPath) -T lib_6_3 -I .\contrib\NRD\Shaders -Fh %(RootDir)%(Directory)%(Filename)%(Extension).h -Vn %(Filename)Blob</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">.\contrib\dxc\bin\x64\dxc.exe %(FullPath) -T lib_6_3 -I .\contrib\NRD\Shaders -Fh %(RootDir)%(Directory)%(Filename)%(Extension).h -Vn %(Filename)Blob</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.\contrib\dxc\bin\x64\dxc.exe %(FullPath) -T lib_6_3 -I .\contrib\NRD\Shaders -Fh %(RootDir)%(Directory)%(Filename)%(Extension).h -Vn %(Filename)Blob</Command>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compiling %(Filename)%(Extension)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">Compiling %(Filename)%(Extension)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compiling %(Filename)%(Extension)</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(RootDir)%(Directory)%(Filename)%(Extension).h</Outputs>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">shaders\BgSky.hlsli;shaders\BlueNoise.hlsli;shaders\Color.hlsli;shaders\Constants.hlsli;shaders\Fog.hlsli;shaders\GlobalBuffers.hlsli;shaders\GlobalHitBuffers.hlsli;shaders\GlobalParams.hlsli;shaders\Im3DCommon.hlsli;shaders\Instances.hlsli;shaders\Lights.hlsli;shaders\Materials.hlsli;shaders\Random.hlsli;shaders\Ray.hlsli;shaders\Textures.hlsli;shaders\UberCombiner.hlsli;shaders\UberVertexPull.hlsli</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">shaders\BgSky.hlsli;shaders\BlueNoise.hlsli;shaders\Color.hlsli;shaders\Constants.hlsli;shaders\Fog.hlsli;shaders\GlobalBuffers.hlsli;shaders\GlobalHitBuffers.hlsli;shaders\GlobalParams.hlsli;shaders\Im3DCommon.hlsli;shaders\Instances.hlsli;shaders\Lights.hlsli;shaders\Materials.hlsli;shaders\Random.hlsli;shaders\Ray.hlsli;shaders\Textures.hlsli;shaders\UberCombiner.hlsli;shaders\UberVertexPull.hlsli;contrib\NRD\Shaders\NRD.hlsli</AdditionalInputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">%(RootDir)%(Directory)%(Filename)%(Extension).h</Outputs>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">shaders\BgSky.hlsli;shaders\BlueNoise.hlsli;shaders\Color.hlsli;shaders\Constants.hlsli;shaders\Fog.hlsli;shaders\GlobalBuffers.hlsli;shaders\GlobalHitBuffers.hlsli;shaders\GlobalParams.hlsli;shaders\Im3DCommon.hlsli;shaders\Instances.hlsli;shaders\Lights.hlsli;shaders\Materials.hlsli;shaders\Random.hlsli;shaders\Ray.hlsli;shaders\Textures.hlsli;shaders\UberCombiner.hlsli;shaders\UberVertexPull.hlsli</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">shaders\BgSky.hlsli;shaders\BlueNoise.hlsli;shaders\Color.hlsli;shaders\Constants.hlsli;shaders\Fog.hlsli;shaders\GlobalBuffers.hlsli;shaders\GlobalHitBuffers.hlsli;shaders\GlobalParams.hlsli;shaders\Im3DCommon.hlsli;shaders\Instances.hlsli;shaders\Lights.hlsli;shaders\Materials.hlsli;shaders\Random.hlsli;shaders\Ray.hlsli;shaders\Textures.hlsli;shaders\UberCombiner.hlsli;shaders\UberVertexPull.hlsli;contrib\NRD\Shaders\NRD.hlsli</AdditionalInputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(RootDir)%(Directory)%(Filename)%(Extension).h</Outputs>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">shaders\BgSky.hlsli;shaders\BlueNoise.hlsli;shaders\Color.hlsli;shaders\Constants.hlsli;shaders\Fog.hlsli;shaders\GlobalBuffers.hlsli;shaders\GlobalHitBuffers.hlsli;shaders\GlobalParams.hlsli;shaders\Im3DCommon.hlsli;shaders\Instances.hlsli;shaders\Lights.hlsli;shaders\Materials.hlsli;shaders\Random.hlsli;shaders\Ray.hlsli;shaders\Textures.hlsli;shaders\UberCombiner.hlsli;shaders\UberVertexPull.hlsli</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">shaders\BgSky.hlsli;shaders\BlueNoise.hlsli;shaders\Color.hlsli;shaders\Constants.hlsli;shaders\Fog.hlsli;shaders\GlobalBuffers.hlsli;shaders\GlobalHitBuffers.hlsli;shaders\GlobalParams.hlsli;shaders\Im3DCommon.hlsli;shaders\Instances.hlsli;shaders\Lights.hlsli;shaders\Materials.hlsli;shaders\Random.hlsli;shaders\Ray.hlsli;shaders\Textures.hlsli;shaders\UberCombiner.hlsli;shaders\UberVertexPull.hlsli;contrib\NRD\Shaders\NRD.hlsli</AdditionalInputs>
     </CustomBuild>
     <CustomBuild Include="shaders\PrimaryRayGen.hlsl">
       <FileType>Document</FileType>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.\contrib\dxc\bin\x64\dxc.exe %(FullPath) -T lib_6_3 -Fh %(RootDir)%(Directory)%(Filename)%(Extension).h -Vn %(Filename)Blob</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">.\contrib\dxc\bin\x64\dxc.exe %(FullPath) -T lib_6_3 -Fh %(RootDir)%(Directory)%(Filename)%(Extension).h -Vn %(Filename)Blob</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.\contrib\dxc\bin\x64\dxc.exe %(FullPath) -T lib_6_3 -Fh %(RootDir)%(Directory)%(Filename)%(Extension).h -Vn %(Filename)Blob</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.\contrib\dxc\bin\x64\dxc.exe %(FullPath) -T lib_6_3 -I .\contrib\NRD\Shaders -Fh %(RootDir)%(Directory)%(Filename)%(Extension).h -Vn %(Filename)Blob</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">.\contrib\dxc\bin\x64\dxc.exe %(FullPath) -T lib_6_3 -I .\contrib\NRD\Shaders -Fh %(RootDir)%(Directory)%(Filename)%(Extension).h -Vn %(Filename)Blob</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.\contrib\dxc\bin\x64\dxc.exe %(FullPath) -T lib_6_3 -I .\contrib\NRD\Shaders -Fh %(RootDir)%(Directory)%(Filename)%(Extension).h -Vn %(Filename)Blob</Command>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compiling %(Filename)%(Extension)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">Compiling %(Filename)%(Extension)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compiling %(Filename)%(Extension)</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(RootDir)%(Directory)%(Filename)%(Extension).h</Outputs>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">shaders\BgSky.hlsli;shaders\BlueNoise.hlsli;shaders\Color.hlsli;shaders\Constants.hlsli;shaders\Reflection.hlsli;shaders\Fog.hlsli;shaders\GlobalBuffers.hlsli;shaders\GlobalHitBuffers.hlsli;shaders\GlobalParams.hlsli;shaders\Im3DCommon.hlsli;shaders\Instances.hlsli;shaders\Lights.hlsli;shaders\Materials.hlsli;shaders\Random.hlsli;shaders\Ray.hlsli;shaders\Textures.hlsli;shaders\UberCombiner.hlsli;shaders\UberVertexPull.hlsli</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">shaders\BgSky.hlsli;shaders\BlueNoise.hlsli;shaders\Color.hlsli;shaders\Constants.hlsli;shaders\Reflection.hlsli;shaders\Fog.hlsli;shaders\GlobalBuffers.hlsli;shaders\GlobalHitBuffers.hlsli;shaders\GlobalParams.hlsli;shaders\Im3DCommon.hlsli;shaders\Instances.hlsli;shaders\Lights.hlsli;shaders\Materials.hlsli;shaders\Random.hlsli;shaders\Ray.hlsli;shaders\Textures.hlsli;shaders\UberCombiner.hlsli;shaders\UberVertexPull.hlsli;contrib\NRD\Shaders\NRD.hlsli</AdditionalInputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">%(RootDir)%(Directory)%(Filename)%(Extension).h</Outputs>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">shaders\BgSky.hlsli;shaders\BlueNoise.hlsli;shaders\Color.hlsli;shaders\Constants.hlsli;shaders\Reflection.hlsli;shaders\Fog.hlsli;shaders\GlobalBuffers.hlsli;shaders\GlobalHitBuffers.hlsli;shaders\GlobalParams.hlsli;shaders\Im3DCommon.hlsli;shaders\Instances.hlsli;shaders\Lights.hlsli;shaders\Materials.hlsli;shaders\Random.hlsli;shaders\Ray.hlsli;shaders\Textures.hlsli;shaders\UberCombiner.hlsli;shaders\UberVertexPull.hlsli</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">shaders\BgSky.hlsli;shaders\BlueNoise.hlsli;shaders\Color.hlsli;shaders\Constants.hlsli;shaders\Reflection.hlsli;shaders\Fog.hlsli;shaders\GlobalBuffers.hlsli;shaders\GlobalHitBuffers.hlsli;shaders\GlobalParams.hlsli;shaders\Im3DCommon.hlsli;shaders\Instances.hlsli;shaders\Lights.hlsli;shaders\Materials.hlsli;shaders\Random.hlsli;shaders\Ray.hlsli;shaders\Textures.hlsli;shaders\UberCombiner.hlsli;shaders\UberVertexPull.hlsli;contrib\NRD\Shaders\NRD.hlsli</AdditionalInputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(RootDir)%(Directory)%(Filename)%(Extension).h</Outputs>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">shaders\BgSky.hlsli;shaders\BlueNoise.hlsli;shaders\Color.hlsli;shaders\Constants.hlsli;shaders\Reflection.hlsli;shaders\Fog.hlsli;shaders\GlobalBuffers.hlsli;shaders\GlobalHitBuffers.hlsli;shaders\GlobalParams.hlsli;shaders\Im3DCommon.hlsli;shaders\Instances.hlsli;shaders\Lights.hlsli;shaders\Materials.hlsli;shaders\Random.hlsli;shaders\Ray.hlsli;shaders\Textures.hlsli;shaders\UberCombiner.hlsli;shaders\UberVertexPull.hlsli</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">shaders\BgSky.hlsli;shaders\BlueNoise.hlsli;shaders\Color.hlsli;shaders\Constants.hlsli;shaders\Reflection.hlsli;shaders\Fog.hlsli;shaders\GlobalBuffers.hlsli;shaders\GlobalHitBuffers.hlsli;shaders\GlobalParams.hlsli;shaders\Im3DCommon.hlsli;shaders\Instances.hlsli;shaders\Lights.hlsli;shaders\Materials.hlsli;shaders\Random.hlsli;shaders\Ray.hlsli;shaders\Textures.hlsli;shaders\UberCombiner.hlsli;shaders\UberVertexPull.hlsli;contrib\NRD\Shaders\NRD.hlsli</AdditionalInputs>
     </CustomBuild>
     <CustomBuild Include="shaders\UberSurfaceHit.hlsl">
       <FileType>Document</FileType>
@@ -227,9 +229,9 @@
   <ItemGroup>
     <CustomBuild Include="shaders\Im3DPS.hlsl">
       <FileType>Document</FileType>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.\contrib\dxc\bin\x64\dxc.exe %(FullPath) -T ps_5_1 -E PSMain -Fh %(RootDir)%(Directory)%(Filename)%(Extension).h -Vn %(Filename)Blob</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.\contrib\dxc\bin\x64\dxc.exe %(FullPath) -T ps_5_1 -E PSMain -Fh %(RootDir)%(Directory)%(Filename)%(Extension).h -Vn %(Filename)Blob</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">.\contrib\dxc\bin\x64\dxc.exe %(FullPath) -T ps_5_1 -E PSMain -Fh %(RootDir)%(Directory)%(Filename)%(Extension).h -Vn %(Filename)Blob</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.\contrib\dxc\bin\x64\dxc.exe %(FullPath) -T ps_6_0 -E PSMain -Fh %(RootDir)%(Directory)%(Filename)%(Extension).h -Vn %(Filename)Blob</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.\contrib\dxc\bin\x64\dxc.exe %(FullPath) -T ps_6_0 -E PSMain -Fh %(RootDir)%(Directory)%(Filename)%(Extension).h -Vn %(Filename)Blob</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">.\contrib\dxc\bin\x64\dxc.exe %(FullPath) -T ps_6_0 -E PSMain -Fh %(RootDir)%(Directory)%(Filename)%(Extension).h -Vn %(Filename)Blob</Command>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compiling %(Filename)%(Extension)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compiling %(Filename)%(Extension)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">Compiling %(Filename)%(Extension)</Message>
@@ -244,9 +246,9 @@
   <ItemGroup>
     <CustomBuild Include="shaders\Im3DVS.hlsl">
       <FileType>Document</FileType>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.\contrib\dxc\bin\x64\dxc.exe %(FullPath) -T vs_5_1 -E VSMain -Fh %(RootDir)%(Directory)%(Filename)%(Extension).h -Vn %(Filename)Blob</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.\contrib\dxc\bin\x64\dxc.exe %(FullPath) -T vs_5_1 -E VSMain -Fh %(RootDir)%(Directory)%(Filename)%(Extension).h -Vn %(Filename)Blob</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">.\contrib\dxc\bin\x64\dxc.exe %(FullPath) -T vs_5_1 -E VSMain -Fh %(RootDir)%(Directory)%(Filename)%(Extension).h -Vn %(Filename)Blob</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.\contrib\dxc\bin\x64\dxc.exe %(FullPath) -T vs_6_0 -E VSMain -Fh %(RootDir)%(Directory)%(Filename)%(Extension).h -Vn %(Filename)Blob</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.\contrib\dxc\bin\x64\dxc.exe %(FullPath) -T vs_6_0 -E VSMain -Fh %(RootDir)%(Directory)%(Filename)%(Extension).h -Vn %(Filename)Blob</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">.\contrib\dxc\bin\x64\dxc.exe %(FullPath) -T vs_6_0 -E VSMain -Fh %(RootDir)%(Directory)%(Filename)%(Extension).h -Vn %(Filename)Blob</Command>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compiling %(Filename)%(Extension)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compiling %(Filename)%(Extension)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">Compiling %(Filename)%(Extension)</Message>
@@ -261,9 +263,9 @@
   <ItemGroup>
     <CustomBuild Include="shaders\Im3DGSLines.hlsl">
       <FileType>Document</FileType>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.\contrib\dxc\bin\x64\dxc.exe %(FullPath) -T gs_5_1 -E GSMain -Fh %(RootDir)%(Directory)%(Filename)%(Extension).h -Vn %(Filename)Blob</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.\contrib\dxc\bin\x64\dxc.exe %(FullPath) -T gs_5_1 -E GSMain -Fh %(RootDir)%(Directory)%(Filename)%(Extension).h -Vn %(Filename)Blob</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">.\contrib\dxc\bin\x64\dxc.exe %(FullPath) -T gs_5_1 -E GSMain -Fh %(RootDir)%(Directory)%(Filename)%(Extension).h -Vn %(Filename)Blob</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.\contrib\dxc\bin\x64\dxc.exe %(FullPath) -T gs_6_0 -E GSMain -Fh %(RootDir)%(Directory)%(Filename)%(Extension).h -Vn %(Filename)Blob</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.\contrib\dxc\bin\x64\dxc.exe %(FullPath) -T gs_6_0 -E GSMain -Fh %(RootDir)%(Directory)%(Filename)%(Extension).h -Vn %(Filename)Blob</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">.\contrib\dxc\bin\x64\dxc.exe %(FullPath) -T gs_6_0 -E GSMain -Fh %(RootDir)%(Directory)%(Filename)%(Extension).h -Vn %(Filename)Blob</Command>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compiling %(Filename)%(Extension)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compiling %(Filename)%(Extension)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">Compiling %(Filename)%(Extension)</Message>
@@ -276,9 +278,9 @@
     </CustomBuild>
     <CustomBuild Include="shaders\Im3DGSPoints.hlsl">
       <FileType>Document</FileType>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.\contrib\dxc\bin\x64\dxc.exe %(FullPath) -T gs_5_1 -E GSMain -Fh %(RootDir)%(Directory)%(Filename)%(Extension).h -Vn %(Filename)Blob</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.\contrib\dxc\bin\x64\dxc.exe %(FullPath) -T gs_5_1 -E GSMain -Fh %(RootDir)%(Directory)%(Filename)%(Extension).h -Vn %(Filename)Blob</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">.\contrib\dxc\bin\x64\dxc.exe %(FullPath) -T gs_5_1 -E GSMain -Fh %(RootDir)%(Directory)%(Filename)%(Extension).h -Vn %(Filename)Blob</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.\contrib\dxc\bin\x64\dxc.exe %(FullPath) -T gs_6_0 -E GSMain -Fh %(RootDir)%(Directory)%(Filename)%(Extension).h -Vn %(Filename)Blob</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.\contrib\dxc\bin\x64\dxc.exe %(FullPath) -T gs_6_0 -E GSMain -Fh %(RootDir)%(Directory)%(Filename)%(Extension).h -Vn %(Filename)Blob</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">.\contrib\dxc\bin\x64\dxc.exe %(FullPath) -T gs_6_0 -E GSMain -Fh %(RootDir)%(Directory)%(Filename)%(Extension).h -Vn %(Filename)Blob</Command>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compiling %(Filename)%(Extension)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compiling %(Filename)%(Extension)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">Compiling %(Filename)%(Extension)</Message>
@@ -293,24 +295,24 @@
   <ItemGroup>
     <CustomBuild Include="shaders\ComposePS.hlsl">
       <FileType>Document</FileType>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.\contrib\dxc\bin\x64\dxc.exe %(FullPath) -T ps_5_1 -E PSMain -Fh %(RootDir)%(Directory)%(Filename)%(Extension).h -Vn %(Filename)Blob</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.\contrib\dxc\bin\x64\dxc.exe %(FullPath) -T ps_5_1 -E PSMain -Fh %(RootDir)%(Directory)%(Filename)%(Extension).h -Vn %(Filename)Blob</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">.\contrib\dxc\bin\x64\dxc.exe %(FullPath) -T ps_5_1 -E PSMain -Fh %(RootDir)%(Directory)%(Filename)%(Extension).h -Vn %(Filename)Blob</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.\contrib\dxc\bin\x64\dxc.exe %(FullPath) -T ps_6_0 -E PSMain -I .\contrib\NRD\Shaders -Fh %(RootDir)%(Directory)%(Filename)%(Extension).h -Vn %(Filename)Blob</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.\contrib\dxc\bin\x64\dxc.exe %(FullPath) -T ps_6_0 -E PSMain -I .\contrib\NRD\Shaders -Fh %(RootDir)%(Directory)%(Filename)%(Extension).h -Vn %(Filename)Blob</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">.\contrib\dxc\bin\x64\dxc.exe %(FullPath) -T ps_6_0 -E PSMain -I .\contrib\NRD\Shaders -Fh %(RootDir)%(Directory)%(Filename)%(Extension).h -Vn %(Filename)Blob</Command>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compiling %(Filename)%(Extension)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compiling %(Filename)%(Extension)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">Compiling %(Filename)%(Extension)</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(RootDir)%(Directory)%(Filename)%(Extension).h</Outputs>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">shaders\BgSky.hlsli;shaders\BlueNoise.hlsli;shaders\Color.hlsli;shaders\Constants.hlsli;shaders\Fog.hlsli;shaders\GlobalBuffers.hlsli;shaders\GlobalHitBuffers.hlsli;shaders\GlobalParams.hlsli;shaders\Im3DCommon.hlsli;shaders\Instances.hlsli;shaders\Lights.hlsli;shaders\Materials.hlsli;shaders\Random.hlsli;shaders\Ray.hlsli;shaders\Textures.hlsli;shaders\UberCombiner.hlsli;shaders\UberVertexPull.hlsli</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">shaders\BgSky.hlsli;shaders\BlueNoise.hlsli;shaders\Color.hlsli;shaders\Constants.hlsli;shaders\Fog.hlsli;shaders\GlobalBuffers.hlsli;shaders\GlobalHitBuffers.hlsli;shaders\GlobalParams.hlsli;shaders\Im3DCommon.hlsli;shaders\Instances.hlsli;shaders\Lights.hlsli;shaders\Materials.hlsli;shaders\Random.hlsli;shaders\Ray.hlsli;shaders\Textures.hlsli;shaders\UberCombiner.hlsli;shaders\UberVertexPull.hlsli;contrib\NRD\Shaders\NRD.hlsli</AdditionalInputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(RootDir)%(Directory)%(Filename)%(Extension).h</Outputs>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">shaders\BgSky.hlsli;shaders\BlueNoise.hlsli;shaders\Color.hlsli;shaders\Constants.hlsli;shaders\Fog.hlsli;shaders\GlobalBuffers.hlsli;shaders\GlobalHitBuffers.hlsli;shaders\GlobalParams.hlsli;shaders\Im3DCommon.hlsli;shaders\Instances.hlsli;shaders\Lights.hlsli;shaders\Materials.hlsli;shaders\Random.hlsli;shaders\Ray.hlsli;shaders\Textures.hlsli;shaders\UberCombiner.hlsli;shaders\UberVertexPull.hlsli</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">shaders\BgSky.hlsli;shaders\BlueNoise.hlsli;shaders\Color.hlsli;shaders\Constants.hlsli;shaders\Fog.hlsli;shaders\GlobalBuffers.hlsli;shaders\GlobalHitBuffers.hlsli;shaders\GlobalParams.hlsli;shaders\Im3DCommon.hlsli;shaders\Instances.hlsli;shaders\Lights.hlsli;shaders\Materials.hlsli;shaders\Random.hlsli;shaders\Ray.hlsli;shaders\Textures.hlsli;shaders\UberCombiner.hlsli;shaders\UberVertexPull.hlsli;contrib\NRD\Shaders\NRD.hlsli</AdditionalInputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">%(RootDir)%(Directory)%(Filename)%(Extension).h</Outputs>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">shaders\BgSky.hlsli;shaders\BlueNoise.hlsli;shaders\Color.hlsli;shaders\Constants.hlsli;shaders\Fog.hlsli;shaders\GlobalBuffers.hlsli;shaders\GlobalHitBuffers.hlsli;shaders\GlobalParams.hlsli;shaders\Im3DCommon.hlsli;shaders\Instances.hlsli;shaders\Lights.hlsli;shaders\Materials.hlsli;shaders\Random.hlsli;shaders\Ray.hlsli;shaders\Textures.hlsli;shaders\UberCombiner.hlsli;shaders\UberVertexPull.hlsli</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">shaders\BgSky.hlsli;shaders\BlueNoise.hlsli;shaders\Color.hlsli;shaders\Constants.hlsli;shaders\Fog.hlsli;shaders\GlobalBuffers.hlsli;shaders\GlobalHitBuffers.hlsli;shaders\GlobalParams.hlsli;shaders\Im3DCommon.hlsli;shaders\Instances.hlsli;shaders\Lights.hlsli;shaders\Materials.hlsli;shaders\Random.hlsli;shaders\Ray.hlsli;shaders\Textures.hlsli;shaders\UberCombiner.hlsli;shaders\UberVertexPull.hlsli;contrib\NRD\Shaders\NRD.hlsli</AdditionalInputs>
     </CustomBuild>
     <CustomBuild Include="shaders\FullScreenVS.hlsl">
       <FileType>Document</FileType>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.\contrib\dxc\bin\x64\dxc.exe %(FullPath) -T vs_5_1 -E VSMain -Fh %(RootDir)%(Directory)%(Filename)%(Extension).h -Vn %(Filename)Blob</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.\contrib\dxc\bin\x64\dxc.exe %(FullPath) -T vs_5_1 -E VSMain -Fh %(RootDir)%(Directory)%(Filename)%(Extension).h -Vn %(Filename)Blob</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">.\contrib\dxc\bin\x64\dxc.exe %(FullPath) -T vs_5_1 -E VSMain -Fh %(RootDir)%(Directory)%(Filename)%(Extension).h -Vn %(Filename)Blob</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.\contrib\dxc\bin\x64\dxc.exe %(FullPath) -T vs_6_0 -E VSMain -Fh %(RootDir)%(Directory)%(Filename)%(Extension).h -Vn %(Filename)Blob</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.\contrib\dxc\bin\x64\dxc.exe %(FullPath) -T vs_6_0 -E VSMain -Fh %(RootDir)%(Directory)%(Filename)%(Extension).h -Vn %(Filename)Blob</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">.\contrib\dxc\bin\x64\dxc.exe %(FullPath) -T vs_6_0 -E VSMain -Fh %(RootDir)%(Directory)%(Filename)%(Extension).h -Vn %(Filename)Blob</Command>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compiling %(Filename)%(Extension)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compiling %(Filename)%(Extension)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">Compiling %(Filename)%(Extension)</Message>
@@ -325,18 +327,18 @@
   <ItemGroup>
     <CustomBuild Include="shaders\DebugPS.hlsl">
       <FileType>Document</FileType>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.\contrib\dxc\bin\x64\dxc.exe %(FullPath) -T ps_5_1 -E PSMain -Fh %(RootDir)%(Directory)%(Filename)%(Extension).h -Vn %(Filename)Blob</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.\contrib\dxc\bin\x64\dxc.exe %(FullPath) -T ps_6_0 -E PSMain -I .\contrib\NRD\Shaders -Fh %(RootDir)%(Directory)%(Filename)%(Extension).h -Vn %(Filename)Blob</Command>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compiling %(Filename)%(Extension)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compiling %(Filename)%(Extension)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">Compiling %(Filename)%(Extension)</Message>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.\contrib\dxc\bin\x64\dxc.exe %(FullPath) -T ps_5_1 -E PSMain -Fh %(RootDir)%(Directory)%(Filename)%(Extension).h -Vn %(Filename)Blob</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">.\contrib\dxc\bin\x64\dxc.exe %(FullPath) -T ps_5_1 -E PSMain -Fh %(RootDir)%(Directory)%(Filename)%(Extension).h -Vn %(Filename)Blob</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.\contrib\dxc\bin\x64\dxc.exe %(FullPath) -T ps_6_0 -E PSMain -I .\contrib\NRD\Shaders -Fh %(RootDir)%(Directory)%(Filename)%(Extension).h -Vn %(Filename)Blob</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">.\contrib\dxc\bin\x64\dxc.exe %(FullPath) -T ps_6_0 -E PSMain -I .\contrib\NRD\Shaders -Fh %(RootDir)%(Directory)%(Filename)%(Extension).h -Vn %(Filename)Blob</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(RootDir)%(Directory)%(Filename)%(Extension).h</Outputs>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">shaders\BgSky.hlsli;shaders\BlueNoise.hlsli;shaders\Color.hlsli;shaders\Constants.hlsli;shaders\Fog.hlsli;shaders\GlobalBuffers.hlsli;shaders\GlobalHitBuffers.hlsli;shaders\GlobalParams.hlsli;shaders\Im3DCommon.hlsli;shaders\Instances.hlsli;shaders\Lights.hlsli;shaders\Materials.hlsli;shaders\Random.hlsli;shaders\Ray.hlsli;shaders\Textures.hlsli;shaders\UberCombiner.hlsli;shaders\UberVertexPull.hlsli</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">shaders\BgSky.hlsli;shaders\BlueNoise.hlsli;shaders\Color.hlsli;shaders\Constants.hlsli;shaders\Fog.hlsli;shaders\GlobalBuffers.hlsli;shaders\GlobalHitBuffers.hlsli;shaders\GlobalParams.hlsli;shaders\Im3DCommon.hlsli;shaders\Instances.hlsli;shaders\Lights.hlsli;shaders\Materials.hlsli;shaders\Random.hlsli;shaders\Ray.hlsli;shaders\Textures.hlsli;shaders\UberCombiner.hlsli;shaders\UberVertexPull.hlsli;contrib\NRD\Shaders\NRD.hlsli</AdditionalInputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">%(RootDir)%(Directory)%(Filename)%(Extension).h</Outputs>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">shaders\BgSky.hlsli;shaders\BlueNoise.hlsli;shaders\Color.hlsli;shaders\Constants.hlsli;shaders\Fog.hlsli;shaders\GlobalBuffers.hlsli;shaders\GlobalHitBuffers.hlsli;shaders\GlobalParams.hlsli;shaders\Im3DCommon.hlsli;shaders\Instances.hlsli;shaders\Lights.hlsli;shaders\Materials.hlsli;shaders\Random.hlsli;shaders\Ray.hlsli;shaders\Textures.hlsli;shaders\UberCombiner.hlsli;shaders\UberVertexPull.hlsli</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">shaders\BgSky.hlsli;shaders\BlueNoise.hlsli;shaders\Color.hlsli;shaders\Constants.hlsli;shaders\Fog.hlsli;shaders\GlobalBuffers.hlsli;shaders\GlobalHitBuffers.hlsli;shaders\GlobalParams.hlsli;shaders\Im3DCommon.hlsli;shaders\Instances.hlsli;shaders\Lights.hlsli;shaders\Materials.hlsli;shaders\Random.hlsli;shaders\Ray.hlsli;shaders\Textures.hlsli;shaders\UberCombiner.hlsli;shaders\UberVertexPull.hlsli;contrib\NRD\Shaders\NRD.hlsli</AdditionalInputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(RootDir)%(Directory)%(Filename)%(Extension).h</Outputs>
-      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">shaders\BgSky.hlsli;shaders\BlueNoise.hlsli;shaders\Color.hlsli;shaders\Constants.hlsli;shaders\Fog.hlsli;shaders\GlobalBuffers.hlsli;shaders\GlobalHitBuffers.hlsli;shaders\GlobalParams.hlsli;shaders\Im3DCommon.hlsli;shaders\Instances.hlsli;shaders\Lights.hlsli;shaders\Materials.hlsli;shaders\Random.hlsli;shaders\Ray.hlsli;shaders\Textures.hlsli;shaders\UberCombiner.hlsli;shaders\UberVertexPull.hlsli</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">shaders\BgSky.hlsli;shaders\BlueNoise.hlsli;shaders\Color.hlsli;shaders\Constants.hlsli;shaders\Fog.hlsli;shaders\GlobalBuffers.hlsli;shaders\GlobalHitBuffers.hlsli;shaders\GlobalParams.hlsli;shaders\Im3DCommon.hlsli;shaders\Instances.hlsli;shaders\Lights.hlsli;shaders\Materials.hlsli;shaders\Random.hlsli;shaders\Ray.hlsli;shaders\Textures.hlsli;shaders\UberCombiner.hlsli;shaders\UberVertexPull.hlsli;contrib\NRD\Shaders\NRD.hlsli</AdditionalInputs>
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
@@ -359,9 +361,9 @@
   <ItemGroup>
     <CustomBuild Include="shaders\PostProcessPS.hlsl">
       <FileType>Document</FileType>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.\contrib\dxc\bin\x64\dxc.exe %(FullPath) -T ps_5_1 -E PSMain -Fh %(RootDir)%(Directory)%(Filename)%(Extension).h -Vn %(Filename)Blob</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">.\contrib\dxc\bin\x64\dxc.exe %(FullPath) -T ps_5_1 -E PSMain -Fh %(RootDir)%(Directory)%(Filename)%(Extension).h -Vn %(Filename)Blob</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.\contrib\dxc\bin\x64\dxc.exe %(FullPath) -T ps_5_1 -E PSMain -Fh %(RootDir)%(Directory)%(Filename)%(Extension).h -Vn %(Filename)Blob</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.\contrib\dxc\bin\x64\dxc.exe %(FullPath) -T ps_6_0 -E PSMain -Fh %(RootDir)%(Directory)%(Filename)%(Extension).h -Vn %(Filename)Blob</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">.\contrib\dxc\bin\x64\dxc.exe %(FullPath) -T ps_6_0 -E PSMain -Fh %(RootDir)%(Directory)%(Filename)%(Extension).h -Vn %(Filename)Blob</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.\contrib\dxc\bin\x64\dxc.exe %(FullPath) -T ps_6_0 -E PSMain -Fh %(RootDir)%(Directory)%(Filename)%(Extension).h -Vn %(Filename)Blob</Command>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compiling %(Filename)%(Extension)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">Compiling %(Filename)%(Extension)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compiling %(Filename)%(Extension)</Message>
@@ -482,22 +484,23 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>./;./contrib/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>./;./contrib/;./contrib/NRD/Include;./contrib/NRD/Shaders;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WIN32;_WINDOWS;RT64_EXPORTS;UNICODE;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>d3d12.lib;dxgi.lib;dxcompiler.lib;nvsdk_ngx_s_dbg.lib;amd_fidelityfx_loader_dx12.lib;libxess.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>d3d12.lib;dxgi.lib;dxcompiler.lib;nvsdk_ngx_s_dbg.lib;amd_fidelityfx_loader_dx12.lib;libxess.lib;NRD.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ImportLibrary>../../lib/rt64libd.lib</ImportLibrary>
-      <AdditionalLibraryDirectories>./contrib/DLSS/Lib/Windows_x86_64/x64;./contrib/FidelityFX-SDK/Kits/FidelityFX/signedbin;./contrib/xess/lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>./contrib/DLSS/Lib/Windows_x86_64/x64;./contrib/FidelityFX-SDK/Kits/FidelityFX/signedbin;./contrib/xess/lib;./contrib/NRD/_Bin/Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
       <Command>(robocopy "$(ProjectDir)\contrib\dxc\bin\x64" $(TargetDir) dxil.dll dxcompiler.dll) ^&amp; IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0
 (robocopy "$(ProjectDir)\contrib\DLSS\Lib\Windows_x86_64\dev" $(TargetDir) nvngx_dlss.dll) ^&amp; IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0
 (robocopy "$(ProjectDir)\contrib\xess\bin" $(TargetDir) libxess.dll igxess.dll XeFX.dll XeFX_Loader.dll) ^&amp; IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0
-(robocopy "$(ProjectDir)\contrib\FidelityFX-SDK\Kits\FidelityFX\signedbin" $(TargetDir) amd_fidelityfx_loader_dx12.dll amd_fidelityfx_upscaler_dx12.dll) ^&amp; IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0</Command>
+(robocopy "$(ProjectDir)\contrib\FidelityFX-SDK\Kits\FidelityFX\signedbin" $(TargetDir) amd_fidelityfx_loader_dx12.dll amd_fidelityfx_upscaler_dx12.dll) ^&amp; IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0
+(robocopy "$(ProjectDir)\contrib\NRD\_Bin\Debug" $(TargetDir) NRD.dll) ^&amp; IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -509,7 +512,7 @@
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WIN32;_WINDOWS;RT64_EXPORTS;UNICODE;NOMINMAX;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>./;./contrib/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>./;./contrib/;./contrib/NRD/Include;./contrib/NRD/Shaders;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
@@ -517,15 +520,16 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <ImportLibrary>../../lib/rt64lib.lib</ImportLibrary>
-      <AdditionalDependencies>d3d12.lib;dxgi.lib;dxcompiler.lib;nvsdk_ngx_d.lib;amd_fidelityfx_loader_dx12.lib;libxess.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>./contrib/DLSS/Lib/Windows_x86_64/x64;./contrib/FidelityFX-SDK/Kits/FidelityFX/signedbin;./contrib/xess/lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>d3d12.lib;dxgi.lib;dxcompiler.lib;nvsdk_ngx_d.lib;amd_fidelityfx_loader_dx12.lib;libxess.lib;NRD.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>./contrib/DLSS/Lib/Windows_x86_64/x64;./contrib/FidelityFX-SDK/Kits/FidelityFX/signedbin;./contrib/xess/lib;./contrib/NRD/_Bin/Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent />
     <PostBuildEvent>
       <Command>(robocopy "$(ProjectDir)\contrib\dxc\bin\x64" $(TargetDir) dxil.dll dxcompiler.dll) ^&amp; IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0
 (robocopy "$(ProjectDir)\contrib\DLSS\Lib\Windows_x86_64\rel" $(TargetDir) nvngx_dlss.dll) ^&amp; IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0
 (robocopy "$(ProjectDir)\contrib\xess\bin" $(TargetDir) libxess.dll igxess.dll XeFX.dll XeFX_Loader.dll) ^&amp; IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0
-(robocopy "$(ProjectDir)\contrib\FidelityFX-SDK\Kits\FidelityFX\signedbin" $(TargetDir) amd_fidelityfx_loader_dx12.dll amd_fidelityfx_upscaler_dx12.dll) ^&amp; IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0</Command>
+(robocopy "$(ProjectDir)\contrib\FidelityFX-SDK\Kits\FidelityFX\signedbin" $(TargetDir) amd_fidelityfx_loader_dx12.dll amd_fidelityfx_upscaler_dx12.dll) ^&amp; IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0
+(robocopy "$(ProjectDir)\contrib\NRD\_Bin\Release" $(TargetDir) NRD.dll) ^&amp; IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Minimal|x64'">

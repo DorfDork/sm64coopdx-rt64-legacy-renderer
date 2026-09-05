@@ -19,6 +19,7 @@ RWTexture2D<int> gInstanceIdPick : register(u27);
 #include "Lights.hlsli"
 #include "Fog.hlsli"
 #include "Reflection.hlsli"
+#include "NRD.hlsli"
 
 float2 WorldToScreenPos(float4x4 viewProj, float3 worldPos) {
 	float4 clipSpace = mul(viewProj, float4(worldPos, 1.0f));
@@ -77,6 +78,7 @@ void PrimaryRayGen() {
 	bool resTransparentLightComputed = false;
 	float4 resColor = float4(0, 0, 0, 1);
 	float2 resFlow = (curBgPos - prevBgPos) * resolution.xy;
+	float resFlowZ = 0.0f;
 	float resReactiveMask = 0.0f;
 	float resLockMask = 0.0f;
 	float resDepth = 1.0f;
@@ -162,7 +164,8 @@ void PrimaryRayGen() {
 			// Store hit if it's been flagged as the primary one.
 			if (storeHit && (resInstanceId < 0)) {
 				float3 vertexFlow = gHitDistAndFlow[hitBufferIndex].yzw;
-				float2 prevPos = WorldToScreenPos(prevViewProj, vertexPosition - vertexFlow);
+				float3 prevVertexPosition = vertexPosition - vertexFlow;
+				float2 prevPos = WorldToScreenPos(prevViewProj, prevVertexPosition);
 				float2 curPos = WorldToScreenPos(viewProj, vertexPosition);
 				float4 projPos = mul(viewProj, float4(vertexPosition, 1.0f));
 				resPosition = vertexPosition;
@@ -171,6 +174,7 @@ void PrimaryRayGen() {
 				resInstanceId = instanceId;
 				resFlow = (curPos - prevPos) * resolution.xy;
 				resDepth = projPos.z / projPos.w;
+				resFlowZ = mul(prevView, float4(prevVertexPosition, 1.0f)).z - mul(view, float4(vertexPosition, 1.0f)).z;
 			}
 		}
 
@@ -193,12 +197,27 @@ void PrimaryRayGen() {
 	gDiffuse[launchIndex] = resColor;
 	gInstanceId[launchIndex] = resInstanceId;
 	gInstanceIdPick[launchIndex] = resPickInstanceId;
+	float2 flow = float2(-resFlow.x, resFlow.y);
 	gTransparent[launchIndex] = float4(resTransparent, 1.0f);
-	gFlow[launchIndex] = float2(-resFlow.x, resFlow.y);
+	gFlow[launchIndex] = float4(flow, resFlowZ, 0.0f);
 	gReactiveMask[launchIndex] = min(resReactiveMask, 0.9f);
 	gLockMask[launchIndex] = binaryLockMask ? step(0.5f, resLockMask) : min(resLockMask, 1.0f);
 	gNormal[launchIndex] = float4(resNormal, 0.0f);
 	gDepth[launchIndex] = resDepth;
+
+	float viewZ = (resInstanceId >= 0) ? mul(view, float4(resPosition, 1.0f)).z : NRD_SKY_VIEWZ;
+	gViewZ[launchIndex] = viewZ;
+	gNormalRoughness[launchIndex] = NRD_FrontEnd_PackNormalAndRoughness(resNormal, 1.0f, 0.0f);
+	float historyConfidence = 0.0f;
+	if (resInstanceId >= 0) {
+		const float WeightNormalExponent = 128.0f;
+		int2 prevIndex = int2(float2(launchIndex) + float2(0.5f, 0.5f) + flow);
+		float weightDepth = abs(resDepth - gPrevDepth[prevIndex]) / 0.01f;
+		float weightNormal = pow(max(0.0f, dot(gPrevNormal[prevIndex].xyz, resNormal)), WeightNormalExponent);
+		historyConfidence = exp(-weightDepth) * weightNormal;
+	}
+
+	gHistoryConfidence[launchIndex] = historyConfidence;
 }
 
 [shader("miss")]

@@ -10,13 +10,14 @@
 #include "Ray.hlsli"
 #include "Random.hlsli"
 #include "Lights.hlsli"
+#include "NRD.hlsli"
 
 [shader("raygeneration")]
 void DirectRayGen() {
 	uint2 launchIndex = DispatchRaysIndex().xy;
 	int instanceId = gInstanceId[launchIndex];
 	if (instanceId < 0) {
-		gDirectLightAccum[launchIndex] = float4(1.0f, 1.0f, 1.0f, 0.0f);
+		gDirectRadianceHitDist[launchIndex] = REBLUR_FrontEnd_PackRadianceAndNormHitDist(float3(1.0f, 1.0f, 1.0f), 0.0f, true);
 		return;
 	}
 
@@ -28,27 +29,9 @@ void DirectRayGen() {
 	float3 normal = gShadingNormal[launchIndex].xyz;
 	float4 specular = gShadingSpecular[launchIndex];
 
-	float3 newDirect = float3(0.0f, 0.0f, 0.0f);
-	float historyLength = 0.0f;
-
-	// Reproject previous direct.
-	if (diReproject) {
-		const float WeightNormalExponent = 128.0f;
-		float2 flow = gFlow[launchIndex].xy;
-		int2 prevIndex = int2(launchIndex + float2(0.5f, 0.5f) + flow);
-		float prevDepth = gPrevDepth[prevIndex];
-		float3 prevNormal = gPrevNormal[prevIndex].xyz;
-		float4 prevDirectAccum = gPrevDirectLightAccum[prevIndex];
-		float depth = gDepth[launchIndex];
-		float weightDepth = abs(depth - prevDepth) / 0.01f;
-		float weightNormal = pow(max(0.0f, dot(prevNormal, normal)), WeightNormalExponent);
-		float historyWeight = exp(-weightDepth) * weightNormal;
-		newDirect = prevDirectAccum.rgb;
-		historyLength = prevDirectAccum.a * historyWeight;
-	}
-
 	float3 lightsSpecularColor;
-	float3 resDirect = ComputeLightsRandom(launchIndex, instanceId, position.xyz, normal.xyz, maxLights, true, lightsSpecularColor);
+	float lightsHitDist;
+	float3 resDirect = ComputeLightsRandom(launchIndex, instanceId, position.xyz, normal.xyz, maxLights, true, lightsSpecularColor, lightsHitDist);
 	resDirect += instanceMaterials[instanceId].selfLightColor;
 
 	const float EyeLightSpecularLift = 0.5f;
@@ -63,9 +46,7 @@ void DirectRayGen() {
 		gTransparent[launchIndex] += float4(resSpecular, 0.0f);
 	}
 
-	// Accumulate.
-	historyLength = min(historyLength + 1.0f, 64.0f);
-	newDirect = lerp(newDirect.rgb, resDirect, 1.0f / historyLength);
-
-	gDirectLightAccum[launchIndex] = float4(newDirect, historyLength);
+	float viewZ = gViewZ[launchIndex];
+	float normHitDist = REBLUR_FrontEnd_GetNormHitDist(lightsHitDist, viewZ, diffuseHitDistParams.xyz, 1.0f);
+	gDirectRadianceHitDist[launchIndex] = REBLUR_FrontEnd_PackRadianceAndNormHitDist(resDirect, normHitDist, true);
 }

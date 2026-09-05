@@ -200,13 +200,14 @@ float CalculateLightIntensitySimple(uint l, float3 position, float3 normal, floa
 
 	return sampleIntensityFactor * dot(SceneLights[l].diffuseColor, float3(1.0f, 1.0f, 1.0f));
 }
-float3 ComputeLight(uint2 launchIndex, uint lightIndex, uint instanceId, float3 position, float3 normal, const bool checkShadows, uint shadowInstanceMask, out float3 outSpecularColor) {
+float3 ComputeLight(uint2 launchIndex, uint lightIndex, uint instanceId, float3 position, float3 normal, const bool checkShadows, uint shadowInstanceMask, out float3 outSpecularColor, out float outHitDist) {
 	float shadowRayBias = instanceMaterials[instanceId].shadowRayBias;
 	float3 lightPosition = SceneLights[lightIndex].position;
 	float3 lightDirection = normalize(lightPosition - position);
 	float lightRadius = SceneLights[lightIndex].attenuationRadius;
 	float lightAttenuation = SceneLights[lightIndex].attenuationExponent;
-	float lightPointRadius = (diSamples > 0) ? SceneLights[lightIndex].pointRadius : 0.0f;
+	const float ShadowOutlineRadiusFraction = 0.1f;
+	float lightPointRadius = (diSamples > 0) ? (SceneLights[lightIndex].pointRadius * ShadowOutlineRadiusFraction) : 0.0f;
 	float3 perpX = cross(-lightDirection, float3(0.f, 1.0f, 0.f));
 	if (all(perpX == 0.0f)) {
 		perpX.x = 1.0;
@@ -222,6 +223,7 @@ float3 ComputeLight(uint2 launchIndex, uint lightIndex, uint instanceId, float3 
 	float lLambertFactor = 0.0f;
 	float lShadowFactor = 0.0f;
 	float lSpecularReach = 0.0f;
+	float lHitDist = 0.0f;
 	while ((samples > 0) && (lightMask > 0.0f)) {
 		float2 sampleCoordinate = getBlueNoise(launchIndex, frameCount + samples).rg * 2.0f - 1.0f;
 		sampleCoordinate = normalize(sampleCoordinate) * saturate(length(sampleCoordinate));
@@ -233,27 +235,31 @@ float3 ComputeLight(uint2 launchIndex, uint lightIndex, uint instanceId, float3 
 		float NdotL = max(dot(normal, sampleDirection), 0.0f);
 		float sampleLambertFactor = ComputeLambertTerm(instanceId, normal, sampleDirection) * sampleIntensityFactor;
 		float sampleShadowFactor = 1.0f;
+		float sampleHitDist = sampleDistance;
 		if (checkShadows) {
 			const float shadowNormalBiasScale = 3.0f;
 			const float grazing = sqrt(saturate(1.0f - NdotL * NdotL));
 			float3 shadowOrigin = position + normal * (shadowRayBias * shadowNormalBiasScale * grazing);
-			sampleShadowFactor = TraceShadow(shadowOrigin, sampleDirection, RAY_MIN_DISTANCE + shadowRayBias, (sampleDistance - shadowOffset), shadowInstanceMask);
+			sampleShadowFactor = TraceShadow(shadowOrigin, sampleDirection, RAY_MIN_DISTANCE + shadowRayBias, (sampleDistance - shadowOffset), shadowInstanceMask, sampleHitDist);
 		}
 
 		lLambertFactor += sampleLambertFactor / maxSamples;
 		lShadowFactor += sampleShadowFactor / maxSamples;
 		lSpecularReach += (NdotL * sampleIntensityFactor) / maxSamples;
+		lHitDist += sampleHitDist / maxSamples;
 
 		samples--;
 	}
 
 	outSpecularColor = SceneLights[lightIndex].specularColor * lSpecularReach * lShadowFactor * lightMask;
+	outHitDist = lHitDist;
 	return SceneLights[lightIndex].diffuseColor * lLambertFactor * lShadowFactor * lightMask;
 }
 
-float3 ComputeLightsRandom(uint2 launchIndex, uint instanceId, float3 position, float3 normal, uint maxLightCount, const bool checkShadows, out float3 outSpecularColor) {
+float3 ComputeLightsRandom(uint2 launchIndex, uint instanceId, float3 position, float3 normal, uint maxLightCount, const bool checkShadows, out float3 outSpecularColor, out float outHitDist) {
 	float3 resultLight = float3(0.0f, 0.0f, 0.0f);
 	outSpecularColor = float3(0.0f, 0.0f, 0.0f);
+	outHitDist = 0.0f;
 	uint lightGroupMaskBits = instanceMaterials[instanceId].lightGroupMaskBits;
 	float ignoreNormalFactor = instanceMaterials[instanceId].ignoreNormalFactor;
 	bool traceShadows = checkShadows && (instanceMaterials[instanceId].shadowEnabled != 0);
@@ -306,8 +312,10 @@ float3 ComputeLightsRandom(uint2 launchIndex, uint instanceId, float3 position, 
 
 			// Compute and add the light.
 			float3 lightSpecularColor;
-			resultLight += ComputeLight(launchIndex, cLightIndex, instanceId, position, normal, traceShadows, shadowInstanceMask, lightSpecularColor) * invProbability;
+			float lightHitDist;
+			resultLight += ComputeLight(launchIndex, cLightIndex, instanceId, position, normal, traceShadows, shadowInstanceMask, lightSpecularColor, lightHitDist) * invProbability;
 			outSpecularColor += lightSpecularColor * invProbability;
+			outHitDist += lightHitDist / lLightCount;
 		}
 	}
 
@@ -317,5 +325,6 @@ float3 ComputeLightsRandom(uint2 launchIndex, uint instanceId, float3 position, 
 
 float3 ComputeLightsRandom(uint2 launchIndex, uint instanceId, float3 position, float3 normal, uint maxLightCount, const bool checkShadows) {
 	float3 unusedSpecularColor;
-	return ComputeLightsRandom(launchIndex, instanceId, position, normal, maxLightCount, checkShadows, unusedSpecularColor);
+	float unusedHitDist;
+	return ComputeLightsRandom(launchIndex, instanceId, position, normal, maxLightCount, checkShadows, unusedSpecularColor, unusedHitDist);
 }

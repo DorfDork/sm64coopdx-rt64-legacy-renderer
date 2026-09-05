@@ -40,83 +40,67 @@ using namespace DirectX;
 #define RT64_SHADOW_CENTER_GROUP_BIT(shadowCenter) \
     (((shadowCenter) != 0) ? (1u << (1u + ((shadowCenter) % RT64_SHADOW_CENTER_GROUP_COUNT))) : 0u)
 
+#define RT64_UAV_DESCRIPTORS(X) \
+    X(gViewDirection) \
+    X(gShadingPosition) \
+    X(gShadingNormal) \
+    X(gShadingSpecular) \
+    X(gDiffuse) \
+    X(gInstanceId) \
+    X(gDirectRadianceHitDist) \
+    X(gIndirectRadianceHitDist) \
+    X(gReflection) \
+    X(gRefraction) \
+    X(gTransparent) \
+    X(gFlow) \
+    X(gReactiveMask) \
+    X(gLockMask) \
+    X(gNormal) \
+    X(gDepth) \
+    X(gPrevNormal) \
+    X(gPrevDepth) \
+    X(gNormalRoughness) \
+    X(gViewZ) \
+    X(gDenoisedDirect) \
+    X(gDenoisedIndirect) \
+    X(gHitDistAndFlow) \
+    X(gHitColor) \
+    X(gHitNormal) \
+    X(gHitSpecular) \
+    X(gHitInstanceId) \
+    X(gInstanceIdPick) \
+    X(gVolumetricLight) \
+    X(gPrevVolumetricLight) \
+    X(gHistoryConfidence)
+
+#define RT64_NON_UAV_DESCRIPTORS(X) \
+    X(gBackground) \
+    X(gParams) \
+    X(SceneBVH) \
+    X(SceneLights) \
+    X(instanceTransforms) \
+    X(instanceMaterials) \
+    X(gBlueNoise) \
+    X(gTextures)
+
+#define RT64_DESCRIPTOR_ENUM_ENTRY(name) name,
+
+// One root signature range per UAV
+#define RT64_UAV_RANGE_ENTRY(name) { UAV_INDEX(name), 1, 0, D3D12_DESCRIPTOR_RANGE_TYPE_UAV, HEAP_INDEX(name) },
+
 namespace RT64 {
-	// Matches order in heap used in shader binding table.
 	enum class HeapIndices : int {
-		gViewDirection,
-		gShadingPosition,
-		gShadingNormal,
-		gShadingSpecular,
-		gDiffuse,
-		gInstanceId,
-		gDirectLightAccum,
-		gIndirectLightAccum,
-		gReflection,
-		gRefraction,
-		gTransparent,
-		gFlow,
-		gReactiveMask,
-		gLockMask,
-		gNormal,
-		gDepth,
-		gPrevNormal,
-		gPrevDepth,
-		gPrevDirectLightAccum,
-		gPrevIndirectLightAccum,
-		gFilteredDirectLight,
-		gFilteredIndirectLight,
-		gHitDistAndFlow,
-		gHitColor,
-		gHitNormal,
-		gHitSpecular,
-		gHitInstanceId,
-		gInstanceIdPick,
-		gVolumetricLight,
-		gPrevVolumetricLight,
-		gBackground,
-		gParams,
-		SceneBVH,
-		SceneLights,
-		instanceTransforms,
-		instanceMaterials,
-		gBlueNoise,
-		gTextures,
+		RT64_UAV_DESCRIPTORS(RT64_DESCRIPTOR_ENUM_ENTRY)
+		RT64_NON_UAV_DESCRIPTORS(RT64_DESCRIPTOR_ENUM_ENTRY)
 		MAX
 	};
 
 	enum class UAVIndices : int {
-		gViewDirection,
-		gShadingPosition,
-		gShadingNormal,
-		gShadingSpecular,
-		gDiffuse,
-		gInstanceId,
-		gDirectLightAccum,
-		gIndirectLightAccum,
-		gReflection,
-		gRefraction,
-		gTransparent,
-		gFlow,
-		gReactiveMask,
-		gLockMask,
-		gNormal,
-		gDepth,
-		gPrevNormal,
-		gPrevDepth,
-		gPrevDirectLightAccum,
-		gPrevIndirectLightAccum,
-		gFilteredDirectLight,
-		gFilteredIndirectLight,
-		gHitDistAndFlow,
-		gHitColor,
-		gHitNormal,
-		gHitSpecular,
-		gHitInstanceId,
-		gInstanceIdPick,
-		gVolumetricLight,
-		gPrevVolumetricLight,
+		RT64_UAV_DESCRIPTORS(RT64_DESCRIPTOR_ENUM_ENTRY)
 		MAX
 	};
+
+	static_assert((int)(UAVIndices::MAX) == 31, "UAV descriptor count changed; renumber the HLSL registers");
 
 	enum class SRVIndices : int {
 		SceneBVH,

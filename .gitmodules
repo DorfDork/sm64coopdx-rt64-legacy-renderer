@@ -4,3 +4,6 @@
 [submodule "src/rt64lib/contrib/xess"]
 	path = src/rt64lib/contrib/xess
 	url = https://github.com/intel/xess
+[submodule "src/rt64lib/contrib/NRD"]
+	path = src/rt64lib/contrib/NRD
+	url = https://github.com/NVIDIA-RTX/NRD

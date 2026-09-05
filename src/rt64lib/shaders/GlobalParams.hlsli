@@ -8,6 +8,7 @@ R"raw(
 cbuffer gParams : register(b0) {
 	float4x4 view;
 	float4x4 viewI;
+	float4x4 prevView;
 	float4x4 prevViewI;
 	float4x4 projection;
 	float4x4 projectionI;
@@ -33,14 +34,13 @@ cbuffer gParams : register(b0) {
 	uint randomSeed;
 	uint diSamples;
 	uint giSamples;
-	uint diReproject;
-	uint giReproject;
 	uint binaryLockMask;
 	uint maxLights;
 	uint motionBlurSamples;
 	uint visualizationMode;
 	uint frameCount;
 	uint volumetricLightingEnabled;
+	float4 diffuseHitDistParams;
 }
 
 #define VISUALIZATION_MODE_FINAL					0

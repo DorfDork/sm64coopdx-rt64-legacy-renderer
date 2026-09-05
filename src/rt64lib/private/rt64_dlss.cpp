@@ -154,6 +154,7 @@ public:
         if (quality == QualityMode::UltraQuality) {
             renderWidth = (displayWidth * 77) / 100;
             renderHeight = (displayHeight * 77) / 100;
+            return true;
         }
         else {
             unsigned int renderOptimalWidth = 0, renderOptimalHeight = 0;

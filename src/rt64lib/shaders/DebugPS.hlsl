@@ -7,6 +7,7 @@
 #include "GlobalBuffers.hlsli"
 #include "GlobalParams.hlsli"
 #include "Random.hlsli"
+#include "NRD.hlsli"
 
 float2 getPreviousFrameUVs(float2 pos) {
     uint2 posInt = uint2(round(pos));
@@ -72,19 +73,19 @@ float4 getInstanceId(float2 pos) {
 }
 
 float4 getDirectLightRaw(float2 pos) {
-    return float4(gDirectLightAccum[pos].rgb, 1.0f);
+    return float4(REBLUR_BackEnd_UnpackRadianceAndNormHitDist(gDirectRadianceHitDist[pos]).rgb, 1.0f);
 }
 
 float4 getDirectLightFiltered(float2 pos) {
-    return float4(gFilteredDirectLight[pos].rgb, 1.0f);
+    return float4(REBLUR_BackEnd_UnpackRadianceAndNormHitDist(gDenoisedDirect[pos]).rgb, 1.0f);
 }
 
 float4 getIndirectLightRaw(float2 pos) {
-    return float4(gIndirectLightAccum[pos].rgb, 1.0f);
+    return float4(REBLUR_BackEnd_UnpackRadianceAndNormHitDist(gIndirectRadianceHitDist[pos]).rgb, 1.0f);
 }
 
 float4 getIndirectLightFiltered(float2 pos) {
-    return float4(gFilteredIndirectLight[pos].rgb, 1.0f);
+    return float4(REBLUR_BackEnd_UnpackRadianceAndNormHitDist(gDenoisedIndirect[pos]).rgb, 1.0f);
 }
 
 float4 getReflection(float2 pos) {
