@@ -91,9 +91,10 @@ void CustomSurfaceAnyHit(inout HitInfo payload, Attributes attrib) {
 	float2 ddx = float2(0.0f, 0.0f);
 	float2 ddy = float2(0.0f, 0.0f);
 	if (useTexture0 || useTexture1) {
-		RayDiff propRayDiff = propagateRayDiffs(payload.rayDiff, WorldRayDirection(), RayTCurrent(), triangleNormal);
+		float3 propDOdx, propDOdy;
+		propagateRayDiffs(payload.rayDiff, WorldRayDirection(), RayTCurrent(), triangleNormal, propDOdx, propDOdy);
 		float2 dBarydx, dBarydy;
-		computeBarycentricDifferentials(propRayDiff, WorldRayDirection(), posW1 - posW0, posW2 - posW0, triangleNormal, dBarydx, dBarydy);
+		computeBarycentricDifferentials(propDOdx, propDOdy, posW1 - posW0, posW2 - posW0, triangleNormal, dBarydx, dBarydy);
 		computeTextureDifferentials(dBarydx, dBarydy, uv0, uv1, uv2, ddx, ddy);
 	}
 

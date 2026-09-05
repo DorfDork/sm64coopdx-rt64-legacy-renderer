@@ -6,6 +6,7 @@
 
 #include "../public/rt64.h"
 
+#include <algorithm>
 #include <map>
 #include <set>
 
@@ -42,6 +43,8 @@ RT64::View::View(Scene *scene) {
 	volumetricFilterHeaps[1] = nullptr;
 	outputBufferGeneration = 0;
 	composeHeapGeneration = (UINT)(-1);
+	composeHeapDenoiseDirect = false;
+	composeHeapDenoiseIndirect = false;
 	volumetricFilterHeapsGeneration[0] = volumetricFilterHeapsGeneration[1] = (UINT)(-1);
 	topLevelASInstanceSignature = (size_t)(-1); // no prior build to refit against yet
 	topLevelASFramesSinceRebuild = 0;
@@ -75,6 +78,7 @@ RT64::View::View(Scene *scene) {
 	globalParamsBufferData.motionBlurSamples = 32;
 	globalParamsBufferData.visualizationMode = 0;
 	globalParamsBufferData.frameCount = 0;
+	globalParamsBufferData.maxDepthBias = 0.0f;
 	globalParamsBufferSize = 0;
 	prevPixelJitter = { 0.0f, 0.0f };
 	rtSwap = false;
@@ -622,7 +626,7 @@ void RT64::View::createTopLevelAS(const std::vector<RenderInstance>& rtInstances
 	// corresponding memory
 	UINT64 scratchSize, resultSize, instanceDescsSize;
 	topLevelASGenerator.ComputeASBufferSizes(scene->getDevice()->getD3D12Device(), true, &scratchSize, &resultSize, &instanceDescsSize);
-	
+
 	// Release the previous buffers and reallocate them if they're not big enough.
 	bool buffersReallocated = false;
 	if ((topLevelASBuffers.scratchSize < scratchSize) || (topLevelASBuffers.resultSize < resultSize) || (topLevelASBuffers.instanceDescSize < instanceDescsSize)) {
@@ -1099,8 +1103,12 @@ void RT64::View::createShaderResourceHeap() {
 			composeHeap = nv_helpers_dx12::CreateDescriptorHeap(scene->getDevice()->getD3D12Device(), handleCount, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, true);
 		}
 
-		if (composeHeapGeneration != outputBufferGeneration) {
+		const bool wantDenoiseDirect = denoiserEnabled && nrdDenoiser->isInitialized() && (globalParamsBufferData.diSamples > 0);
+		const bool wantDenoiseIndirect = denoiserEnabled && nrdDenoiser->isInitialized() && (globalParamsBufferData.giSamples > 0);
+		if ((composeHeapGeneration != outputBufferGeneration) || (composeHeapDenoiseDirect != wantDenoiseDirect) || (composeHeapDenoiseIndirect != wantDenoiseIndirect)) {
 			composeHeapGeneration = outputBufferGeneration;
+			composeHeapDenoiseDirect = wantDenoiseDirect;
+			composeHeapDenoiseIndirect = wantDenoiseIndirect;
 
 			D3D12_CPU_DESCRIPTOR_HANDLE handle = composeHeap->GetCPUDescriptorHandleForHeapStart();
 
@@ -1120,14 +1128,14 @@ void RT64::View::createShaderResourceHeap() {
 			scene->getDevice()->getD3D12Device()->CreateShaderResourceView(rtDiffuse.Get(), &textureSRVDesc, handle);
 			handle.ptr += handleIncrement;
 
-			// SRV for the denoised direct light buffer.
+			// SRV for the direct light buffer, either denoised or raw.
 			textureSRVDesc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
-			scene->getDevice()->getD3D12Device()->CreateShaderResourceView(rtDenoisedDirect.Get(), &textureSRVDesc, handle);
+			scene->getDevice()->getD3D12Device()->CreateShaderResourceView(wantDenoiseDirect ? rtDenoisedDirect.Get() : rtDirectRadianceHitDist.Get(), &textureSRVDesc, handle);
 			handle.ptr += handleIncrement;
 
-			// SRV for the denoised indirect light buffer.
+			// SRV for the indirect light buffer, either denoised or raw.
 			textureSRVDesc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
-			scene->getDevice()->getD3D12Device()->CreateShaderResourceView(rtDenoisedIndirect.Get(), &textureSRVDesc, handle);
+			scene->getDevice()->getD3D12Device()->CreateShaderResourceView(wantDenoiseIndirect ? rtDenoisedIndirect.Get() : rtIndirectRadianceHitDist.Get(), &textureSRVDesc, handle);
 			handle.ptr += handleIncrement;
 
 			// SRV for reflection buffer.
@@ -1458,35 +1466,14 @@ void RT64::View::denoiseLighting(const std::vector<ID3D12DescriptorHeap *> &heap
 	const bool denoiseDirect = denoiserReady && (globalParamsBufferData.diSamples > 0);
 	const bool denoiseIndirect = denoiserReady && (globalParamsBufferData.giSamples > 0);
 
-	auto copyThrough = [d3dCommandList](ID3D12Resource *source, ID3D12Resource *dest) {
-		CD3DX12_RESOURCE_BARRIER beforeCopyBarriers[] = {
-			CD3DX12_RESOURCE_BARRIER::Transition(source, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COPY_SOURCE),
-			CD3DX12_RESOURCE_BARRIER::Transition(dest, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COPY_DEST)
-		};
-
-		d3dCommandList->ResourceBarrier(_countof(beforeCopyBarriers), beforeCopyBarriers);
-
-		d3dCommandList->CopyResource(dest, source);
-
-		CD3DX12_RESOURCE_BARRIER afterCopyBarriers[] = {
-			CD3DX12_RESOURCE_BARRIER::Transition(source, D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS),
-			CD3DX12_RESOURCE_BARRIER::Transition(dest, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE)
-		};
-
-		d3dCommandList->ResourceBarrier(_countof(afterCopyBarriers), afterCopyBarriers);
-	};
-
-	if (!denoiseDirect) {
-		copyThrough(rtDirectRadianceHitDist.Get(), rtDenoisedDirect.Get());
-	}
-
-	if (!denoiseIndirect) {
-		copyThrough(rtIndirectRadianceHitDist.Get(), rtDenoisedIndirect.Get());
-	}
-
 	if (!denoiseDirect && !denoiseIndirect) {
-		CD3DX12_RESOURCE_BARRIER flowBarrier = CD3DX12_RESOURCE_BARRIER::Transition(rtFlow.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-		d3dCommandList->ResourceBarrier(1, &flowBarrier);
+		CD3DX12_RESOURCE_BARRIER rawSignalBarriers[] = {
+			CD3DX12_RESOURCE_BARRIER::Transition(rtDirectRadianceHitDist.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE),
+			CD3DX12_RESOURCE_BARRIER::Transition(rtIndirectRadianceHitDist.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE),
+			CD3DX12_RESOURCE_BARRIER::Transition(rtFlow.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE)
+		};
+
+		d3dCommandList->ResourceBarrier(_countof(rawSignalBarriers), rawSignalBarriers);
 		return;
 	}
 
@@ -1500,9 +1487,15 @@ void RT64::View::denoiseLighting(const std::vector<ID3D12DescriptorHeap *> &heap
 	if (denoiseDirect) {
 		beforeDenoiseBarriers.push_back(CD3DX12_RESOURCE_BARRIER::Transition(rtDirectRadianceHitDist.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE));
 	}
+	else {
+		beforeDenoiseBarriers.push_back(CD3DX12_RESOURCE_BARRIER::Transition(rtDirectRadianceHitDist.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
+	}
 
 	if (denoiseIndirect) {
 		beforeDenoiseBarriers.push_back(CD3DX12_RESOURCE_BARRIER::Transition(rtIndirectRadianceHitDist.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE));
+	}
+	else {
+		beforeDenoiseBarriers.push_back(CD3DX12_RESOURCE_BARRIER::Transition(rtIndirectRadianceHitDist.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
 	}
 
 	d3dCommandList->ResourceBarrier(static_cast<UINT>(beforeDenoiseBarriers.size()), beforeDenoiseBarriers.data());
@@ -1628,6 +1621,8 @@ void RT64::View::update() {
 		rtAnyReflection = false;
 		rtAnyRefraction = false;
 
+		float maxDepthBias = 0.0f;
+
 		for (Instance *instance : scene->getInstances()) {
 			instFlags = instance->getFlags();
 			usedMesh = instance->getMesh();
@@ -1677,6 +1672,7 @@ void RT64::View::update() {
 				const float MaterialFactorEpsilon = 1e-6f;
 				rtAnyReflection = rtAnyReflection || (renderInstance.material.reflectionFactor > MaterialFactorEpsilon);
 				rtAnyRefraction = rtAnyRefraction || (renderInstance.material.refractionFactor > MaterialFactorEpsilon);
+				maxDepthBias = std::max(maxDepthBias, std::abs(renderInstance.material.depthBias));
 				rtInstances.push_back(renderInstance);
 			}
 			else if (instFlags & RT64_INSTANCE_RASTER_BACKGROUND) {
@@ -1686,6 +1682,8 @@ void RT64::View::update() {
 				rasterFgInstances.push_back(renderInstance);
 			}
 		}
+
+		globalParamsBufferData.maxDepthBias = maxDepthBias;
 
 		// Create the acceleration structures used by the raytracer.
 		if (!rtInstances.empty()) {
@@ -1720,6 +1718,7 @@ void RT64::View::update() {
 		rasterFgInstances.clear();
 		rtAnyReflection = false;
 		rtAnyRefraction = false;
+		globalParamsBufferData.maxDepthBias = 0.0f;
 	}
 
 	RT64_LOG_PRINTF("Finished view update");
@@ -1883,30 +1882,37 @@ void RT64::View::render(float deltaTimeMs) {
 		updateFilterParamsBuffer();
 	}
 
+	const bool rtCoversTarget = !rtInstances.empty() &&
+		(globalParamsBufferData.visualizationMode == VisualizationModeFinal) &&
+		(rtScissorRect.left <= 0) && (rtScissorRect.top <= 0) &&
+		(rtScissorRect.right >= (LONG)(getWidth())) && (rtScissorRect.bottom >= (LONG)(getHeight()));
+
 	// Draw the background instances to the screen.
-	RT64_LOG_PRINTF("Drawing background instances");
-	resetScissor();
-	resetViewport();
-	drawInstances(rasterBgInstances, (UINT)(rtInstances.size()), true);
+	if (!rtCoversTarget) {
+		RT64_LOG_PRINTF("Drawing background instances");
+		resetScissor();
+		resetViewport();
+		drawInstances(rasterBgInstances, (UINT)(rtInstances.size()), true);
+	}
 
 	// Draw the background instances to a buffer that can be used by the tracer as an environment map.
 	{
 		// Transition the background texture render target.
 		CD3DX12_RESOURCE_BARRIER bgBarrier = CD3DX12_RESOURCE_BARRIER::Transition(rasterBg.Get(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET);
 		d3dCommandList->ResourceBarrier(1, &bgBarrier);
-		
+
 		// Set as render target and clear it.
 		CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(rasterBgHeap->GetCPUDescriptorHandleForHeapStart(), 0, outputRtvDescriptorSize);
 		const float clearColor[] = { 0.0f, 0.0f, 0.0f, 0.0f };
 		d3dCommandList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
 		d3dCommandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
-		
+
 		// Draw background instances to it.
 		RT64_LOG_PRINTF("Drawing background instances to render target");
 		resetScissor();
 		resetViewport();
 		drawInstances(rasterBgInstances, (UINT)(rtInstances.size()), false);
-		
+
 		// Transition the the background from render target to SRV.
 		bgBarrier = CD3DX12_RESOURCE_BARRIER::Transition(rasterBg.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
 		d3dCommandList->ResourceBarrier(1, &bgBarrier);
@@ -2131,13 +2137,13 @@ void RT64::View::render(float deltaTimeMs) {
 		d3dCommandList->DrawInstanced(3, 1, 0, 0);
 
 		// Switch output to a pixel shader resource.
-		CD3DX12_RESOURCE_BARRIER afterComposeBarriers[] = {
+		std::vector<CD3DX12_RESOURCE_BARRIER> afterComposeBarriers = {
 			CD3DX12_RESOURCE_BARRIER::Transition(rtOutputCur, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE),
-			CD3DX12_RESOURCE_BARRIER::Transition(rtDenoisedDirect.Get(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS),
-			CD3DX12_RESOURCE_BARRIER::Transition(rtDenoisedIndirect.Get(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS)
+			CD3DX12_RESOURCE_BARRIER::Transition(composeHeapDenoiseDirect ? rtDenoisedDirect.Get() : rtDirectRadianceHitDist.Get(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS),
+			CD3DX12_RESOURCE_BARRIER::Transition(composeHeapDenoiseIndirect ? rtDenoisedIndirect.Get() : rtIndirectRadianceHitDist.Get(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS)
 		};
 
-		d3dCommandList->ResourceBarrier(_countof(afterComposeBarriers), afterComposeBarriers);
+		d3dCommandList->ResourceBarrier(static_cast<UINT>(afterComposeBarriers.size()), afterComposeBarriers.data());
 
 		if (volumetricLights) {
 			CD3DX12_RESOURCE_BARRIER volumetricComposeBarrier = CD3DX12_RESOURCE_BARRIER::Transition(rtFilteredVolumetricLight[1].Get(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);

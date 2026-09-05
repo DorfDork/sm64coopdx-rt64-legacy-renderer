@@ -22,6 +22,21 @@ void UberSurfaceAnyHit(inout HitInfo payload, Attributes attrib) {
 	uint instanceId = InstanceIndex();
 	uint triangleIndex = PrimitiveIndex();
 	float3 barycentrics = float3((1.0f - attrib.bary.x - attrib.bary.y), attrib.bary.x, attrib.bary.y);
+	uint2 pixelIdx = DispatchRaysIndex().xy;
+	uint2 pixelDims = DispatchRaysDimensions().xy;
+	uint hitStride = pixelDims.x * pixelDims.y;
+	float tval = WithDistanceBias(RayTCurrent(), instanceId);
+
+	// This hit should get get evicted anyway because it's the furthest hit in the buffer.
+	if ((payload.nhits >= MAX_HIT_QUERIES) && (tval >= gHitDistAndFlow[getHitBufferIndex(MAX_HIT_QUERIES - 1, pixelIdx, pixelDims)].x)) {
+		IgnoreHit();
+		return;
+	}
+
+	// This hit is beyond a confirmed-opaque surface and is never visible.
+	if (RayTCurrent() > (payload.opaqueT + maxDepthBias)) {
+		return;
+	}
 
 	MaterialProperties material = instanceMaterials[instanceId];
 	float4 diffuseColorMix = material.diffuseColorMix;
@@ -98,9 +113,10 @@ void UberSurfaceAnyHit(inout HitInfo payload, Attributes attrib) {
 	float2 ddx = float2(0.0f, 0.0f);
 	float2 ddy = float2(0.0f, 0.0f);
 	if (useTexture0 || useTexture1) {
-		RayDiff propRayDiff = propagateRayDiffs(payload.rayDiff, WorldRayDirection(), RayTCurrent(), triangleNormal);
+		float3 propDOdx, propDOdy;
+		propagateRayDiffs(payload.rayDiff, WorldRayDirection(), RayTCurrent(), triangleNormal, propDOdx, propDOdy);
 		float2 dBarydx, dBarydy;
-		computeBarycentricDifferentials(propRayDiff, WorldRayDirection(), posW1 - posW0, posW2 - posW0, triangleNormal, dBarydx, dBarydy);
+		computeBarycentricDifferentials(propDOdx, propDOdy, posW1 - posW0, posW2 - posW0, triangleNormal, dBarydx, dBarydy);
 		computeTextureDifferentials(dBarydx, dBarydy, uv0, uv1, uv2, ddx, ddy);
 	}
 
@@ -146,6 +162,10 @@ void UberSurfaceAnyHit(inout HitInfo payload, Attributes attrib) {
 
 	if (optNoise) {
 		resultColor.a *= round(nextRand(seed));
+	}
+
+	if (resultColor.a >= 1.0f) {
+		payload.opaqueT = min(payload.opaqueT, RayTCurrent());
 	}
 
 	vertexNormal = normalize(mul(instanceTransforms[instanceId].objectToWorldNormal, float4(vertexNormal, 0.f)).xyz);
@@ -197,11 +217,6 @@ void UberSurfaceAnyHit(inout HitInfo payload, Attributes attrib) {
 		}
 	}
 
-	uint2 pixelIdx = DispatchRaysIndex().xy;
-	uint2 pixelDims = DispatchRaysDimensions().xy;
-	uint hitStride = pixelDims.x * pixelDims.y;
-
-	float tval = WithDistanceBias(RayTCurrent(), instanceId);
 	uint hi = getHitBufferIndex(min(payload.nhits, MAX_HIT_QUERIES), pixelIdx, pixelDims);
 	uint minHi = getHitBufferIndex(0, pixelIdx, pixelDims);
 	uint lo = hi - hitStride;

@@ -19,21 +19,19 @@ uint ShadowCenterGroupBit(uint shadowCenter) {
 // Structures
 
 struct RayDiff {
-    float3 dOdx;
-    float3 dOdy;
     float3 dDdx;
     float3 dDdy;
 };
 
 struct HitInfo {
 	uint nhits;
+	float opaqueT;
     RayDiff rayDiff;
 };
 
 struct ShadowHitInfo {
 	float shadowHit;
 	float nearestHitDistance;
-    RayDiff rayDiff;
 };
 
 struct Attributes {
@@ -52,34 +50,27 @@ void computeRayDiffs(float3 nonNormalizedCameraRaydir, float3 cameraRight, float
     dDdy = -((dd * cameraUp) - (du * nonNormalizedCameraRaydir)) * divd / viewportDims.y;
 }
 
-RayDiff propagateRayDiffs(RayDiff rayDiff, float3 D, float t, float3 N) {
-    float3 dodx = rayDiff.dOdx + t * rayDiff.dDdx;    // Part of Igehy Equation 10
-    float3 dody = rayDiff.dOdy + t * rayDiff.dDdy;
+void propagateRayDiffs(RayDiff rayDiff, float3 D, float t, float3 N, out float3 dOdx, out float3 dOdy) {
+    dOdx = t * rayDiff.dDdx;
+    dOdy = t * rayDiff.dDdy;
 
-    float rcpDN = 1.0f / dot(D, N);              // Igehy Equation 10 and 12
-    float dtdx = -dot(dodx, N) * rcpDN;
-    float dtdy = -dot(dody, N) * rcpDN;
-    dodx += D * dtdx;
-    dody += D * dtdy;
-
-    RayDiff propRayDiff;
-    propRayDiff.dOdx = dodx;
-    propRayDiff.dOdy = dody;
-    propRayDiff.dDdx = rayDiff.dDdx;
-    propRayDiff.dDdy = rayDiff.dDdy;
-    return propRayDiff;
+    float rcpDN = 1.0f / dot(D, N);
+    float dtdx = -dot(dOdx, N) * rcpDN;
+    float dtdy = -dot(dOdy, N) * rcpDN;
+    dOdx += D * dtdx;
+    dOdy += D * dtdy;
 }
 
-void computeBarycentricDifferentials(RayDiff rayDiff, float3 rayDir, float3 edge01W, float3 edge02W, float3 faceNormalW, out float2 dBarydx, out float2 dBarydy) {
+void computeBarycentricDifferentials(float3 dOdx, float3 dOdy, float3 edge01W, float3 edge02W, float3 faceNormalW, out float2 dBarydx, out float2 dBarydy) {
     float3 Nu = cross(edge02W, faceNormalW);      // Igehy "Normal-Interpolated Triangles", page 182 SIGGRAPH 1999
     float3 Nv = cross(edge01W, faceNormalW);
     float3 Lu = Nu / (dot(Nu, edge01W));          // Plane equations for the triangle edges, scaled in order to make the dot with the opposive vertex = 1
     float3 Lv = Nv / (dot(Nv, edge02W));
 
-    dBarydx.x = dot(Lu, rayDiff.dOdx);     // du / dx
-    dBarydx.y = dot(Lv, rayDiff.dOdx);     // dv / dx
-    dBarydy.x = dot(Lu, rayDiff.dOdy);     // du / dy
-    dBarydy.y = dot(Lv, rayDiff.dOdy);     // dv / dy
+    dBarydx.x = dot(Lu, dOdx);     // du / dx
+    dBarydx.y = dot(Lv, dOdx);     // dv / dx
+    dBarydy.x = dot(Lu, dOdy);     // du / dy
+    dBarydy.y = dot(Lv, dOdy);     // dv / dy
 }
 
 void computeTextureDifferentials(float2 dBarydx, float2 dBarydy, float2 uv0, float2 uv1, float2 uv2, out float2 dUVdx, out float2 dUVdy) {

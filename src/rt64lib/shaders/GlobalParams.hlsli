@@ -41,6 +41,7 @@ cbuffer gParams : register(b0) {
 	uint frameCount;
 	uint volumetricLightingEnabled;
 	float4 diffuseHitDistParams;
+	float maxDepthBias;
 }
 
 #define VISUALIZATION_MODE_FINAL					0

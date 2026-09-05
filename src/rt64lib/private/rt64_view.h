@@ -79,6 +79,7 @@ namespace RT64 {
 			unsigned int frameCount;
 			unsigned int volumetricLightingEnabled;
 			RT64_VECTOR4 diffuseHitDistParams;
+			float maxDepthBias;
 		};
 
 		static_assert(offsetof(GlobalParamsBuffer, diffuseHitDistParams) % 16 == 0,
@@ -155,6 +156,8 @@ namespace RT64 {
 		ID3D12DescriptorHeap *volumetricFilterHeaps[2];
 		UINT outputBufferGeneration;
 		UINT composeHeapGeneration;
+		bool composeHeapDenoiseDirect;
+		bool composeHeapDenoiseIndirect;
 		UINT volumetricFilterHeapsGeneration[2];
 		nv_helpers_dx12::ShaderBindingTableGenerator sbtHelper;
 		AllocatedResource sbtStorage;
