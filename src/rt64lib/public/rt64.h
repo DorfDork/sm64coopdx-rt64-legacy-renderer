@@ -215,6 +215,9 @@ typedef struct {
 	float selfLightIntensity;
 	unsigned int shadowEnabled;
 	unsigned int shadowCenter;
+	unsigned int depthWrite;
+	unsigned int depthTest;
+	unsigned int zmodeXlu;
 } RT64_MATERIAL;
 
 // Light

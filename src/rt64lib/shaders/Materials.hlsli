@@ -53,6 +53,9 @@ struct MaterialProperties {
 	float selfLightIntensity;
 	uint shadowEnabled;
 	uint shadowCenter;
+	uint depthWrite;
+	uint depthTest;
+	uint zmodeXlu;
 };
 
 float2 ComputeGeneratedUV(float4 textureGenU, float4 textureGenV, float3 modelSpaceNormal) {
@@ -76,5 +79,9 @@ float2 ComputeGeneratedUV(float4 textureGenU, float4 textureGenV, float3 modelSp
 #define RT64_CC_FLAG_BUMP_MAP          (1u << 13)
 #define RT64_CC_FLAG_INPUT_COUNT_SHIFT 8
 #define RT64_CC_FLAG_INPUT_COUNT_MASK  (0xFu << 8)
+
+bool isTranslucentDepthWriter(MaterialProperties material) {
+	return (material.depthWrite != 0);
+}
 //)raw"
 #endif

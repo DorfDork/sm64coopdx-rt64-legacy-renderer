@@ -164,7 +164,7 @@ void UberSurfaceAnyHit(inout HitInfo payload, Attributes attrib) {
 		resultColor.a *= round(nextRand(seed));
 	}
 
-	if (resultColor.a >= 1.0f) {
+	if ((resultColor.a >= 1.0f) && (material.zmodeXlu == 0)) {
 		payload.opaqueT = min(payload.opaqueT, RayTCurrent());
 	}
 

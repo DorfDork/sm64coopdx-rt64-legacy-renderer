@@ -83,12 +83,29 @@ void PrimaryRayGen() {
 	float resDepth = 1.0f;
 	int resInstanceId = -1;
 	int resPickInstanceId = -1;
+	float depthWriteT = RAY_MAX_DISTANCE;
+	float depthWriteOrder = 0.0f;
 	for (uint hit = 0; hit < payload.nhits; hit++) {
 		uint hitBufferIndex = getHitBufferIndex(hit, launchIndex, launchDims);
 		float4 hitColor = gHitColor[hitBufferIndex];
+		uint hitInstanceId = gHitInstanceId[hitBufferIndex];
+
+		// Do the same depth rejection as rasterization.
+		MaterialProperties hitMaterial = instanceMaterials[hitInstanceId];
+		float hitT = WithoutDistanceBias(gHitDistAndFlow[hitBufferIndex].x, hitInstanceId);
+		float hitOrder = hitMaterial.depthBias;
+		if ((hitMaterial.depthTest != 0) && (hitT > (depthWriteT + maxDepthBias)) && (hitOrder >= depthWriteOrder)) {
+			continue;
+		}
+
+		if (isTranslucentDepthWriter(hitMaterial) && (hitColor.a > EPSILON) && (hitT < depthWriteT)) {
+			depthWriteT = hitT;
+			depthWriteOrder = hitOrder;
+		}
+
 		float alphaContrib = (resColor.a * hitColor.a);
 		if (alphaContrib >= EPSILON) {
-			uint instanceId = gHitInstanceId[hitBufferIndex];
+			uint instanceId = hitInstanceId;
 			if (resPickInstanceId < 0) {
 				resPickInstanceId = instanceId;
 			}

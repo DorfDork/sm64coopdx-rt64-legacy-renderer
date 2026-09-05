@@ -63,9 +63,25 @@ void ReflectionRayGen() {
 	int resInstanceId = -1;
 	float4 resColor = float4(0.0f, 0.0f, 0.0f, 1.0f);
 	float3 resTransparent = float3(0.0f, 0.0f, 0.0f);
+	float depthWriteT = RAY_MAX_DISTANCE;
+	float depthWriteOrder = 0.0f;
 	for (uint hit = 0; hit < payload.nhits; hit++) {
 		uint hitBufferIndex = getHitBufferIndex(hit, launchIndex, launchDims);
 		float4 hitColor = gHitColor[hitBufferIndex];
+
+		// Do the same depth rejection as primary rays.
+		MaterialProperties hitMaterial = instanceMaterials[gHitInstanceId[hitBufferIndex]];
+		float hitT = WithoutDistanceBias(gHitDistAndFlow[hitBufferIndex].x, gHitInstanceId[hitBufferIndex]);
+		float hitOrder = hitMaterial.depthBias;
+		if ((hitMaterial.depthTest != 0) && (hitT > (depthWriteT + maxDepthBias)) && (hitOrder >= depthWriteOrder)) {
+			continue;
+		}
+
+		if (isTranslucentDepthWriter(hitMaterial) && (hitColor.a > EPSILON) && (hitT < depthWriteT)) {
+			depthWriteT = hitT;
+			depthWriteOrder = hitOrder;
+		}
+
 		float alphaContrib = (resColor.a * hitColor.a);
 		if (alphaContrib >= EPSILON) {
 			uint hitInstanceId = gHitInstanceId[hitBufferIndex];
