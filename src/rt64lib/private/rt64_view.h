@@ -6,7 +6,9 @@
 
 #include "rt64_common.h"
 
+#include <array>
 #include <cstddef>
+#include <functional>
 #include <map>
 
 #include "nv_helpers_dx12/TopLevelASGenerator.h"
@@ -150,6 +152,14 @@ namespace RT64 {
 		UINT outputRtvDescriptorSize;
 		ID3D12DescriptorHeap *descriptorHeap;
 		UINT descriptorHeapEntryCount;
+		std::vector<std::pair<ID3D12Resource *, DXGI_FORMAT>> heapTextureSlots;
+		UINT descriptorHeapOutputGeneration;
+		D3D12_GPU_VIRTUAL_ADDRESS cachedTlasVA;
+		ID3D12Resource *cachedLightsBuffer;
+		int cachedLightsCount;
+		ID3D12Resource *cachedInstanceTransformsBuffer;
+		ID3D12Resource *cachedInstanceMaterialsBuffer;
+		UINT cachedInstanceCount;
 		ID3D12DescriptorHeap *samplerHeap;
 		ID3D12DescriptorHeap *composeHeap;
 		ID3D12DescriptorHeap *postProcessHeap;
@@ -228,11 +238,14 @@ namespace RT64 {
 		static uint32_t customTextureHeapStart();
 		void createTopLevelAS(const std::vector<RenderInstance> &rtInstances);
 		void createShaderResourceHeap();
+		void writeStaticDescriptors(const std::function<D3D12_CPU_DESCRIPTOR_HANDLE(HeapIndices)> &handleFor, bool dirty);
+		void writeSwapDescriptors(const std::function<D3D12_CPU_DESCRIPTOR_HANDLE(HeapIndices)> &handleFor);
+		void writeDynamicDescriptors(const std::function<D3D12_CPU_DESCRIPTOR_HANDLE(HeapIndices)> &handleFor, bool forceRewrite);
 		void createShaderBindingTable();
 		float getProjectionAspectRatio() const;
 		void createGlobalParamsBuffer();
 		void updateGlobalParamsBuffer();
-		void denoiseLighting(const std::vector<ID3D12DescriptorHeap *> &heaps, float deltaTimeMs);
+		void denoiseLighting(const std::array<ID3D12DescriptorHeap *, 2> &heaps, float deltaTimeMs);
 		void createFilterParamsBuffer();
 		void updateFilterParamsBuffer();
 	public:

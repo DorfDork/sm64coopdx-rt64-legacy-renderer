@@ -435,6 +435,8 @@ typedef const char *(*GetLastErrorPtr)();
 typedef RT64_DEVICE* (*CreateDevicePtr)(void *hwnd);
 typedef void (*DestroyDevicePtr)(RT64_DEVICE* device);
 typedef void (*DrawDevicePtr)(RT64_DEVICE *device, int vsyncInterval, float deltaTimeMs);
+typedef void (*BeginMeshBatchPtr)(RT64_DEVICE *device);
+typedef void (*EndMeshBatchPtr)(RT64_DEVICE *device);
 typedef RT64_VIEW* (*CreateViewPtr)(RT64_SCENE* scenePtr);
 typedef void (*SetViewPerspectivePtr)(RT64_VIEW *viewPtr, RT64_MATRIX4 viewMatrix, float fovRadians, float nearDist, float farDist, bool canReproject);
 typedef void (*SetViewDescriptionPtr)(RT64_VIEW *viewPtr, RT64_VIEW_DESC viewDesc);
@@ -485,6 +487,8 @@ typedef struct {
 	DestroyDevicePtr DestroyDevice;
 #ifndef RT64_MINIMAL
 	DrawDevicePtr DrawDevice;
+	BeginMeshBatchPtr BeginMeshBatch;
+	EndMeshBatchPtr EndMeshBatch;
 	CreateViewPtr CreateView;
 	SetViewPerspectivePtr SetViewPerspective;
 	SetViewDescriptionPtr SetViewDescription;
@@ -549,6 +553,8 @@ inline RT64_LIBRARY RT64_LoadLibrary() {
 
 #ifndef RT64_MINIMAL
 		lib.DrawDevice = (DrawDevicePtr)(GetProcAddress(lib.handle, "RT64_DrawDevice"));
+		lib.BeginMeshBatch = (BeginMeshBatchPtr)(GetProcAddress(lib.handle, "RT64_BeginMeshBatch"));
+		lib.EndMeshBatch = (EndMeshBatchPtr)(GetProcAddress(lib.handle, "RT64_EndMeshBatch"));
 		lib.CreateView = (CreateViewPtr)(GetProcAddress(lib.handle, "RT64_CreateView"));
 		lib.SetViewPerspective = (SetViewPerspectivePtr)(GetProcAddress(lib.handle, "RT64_SetViewPerspective"));
 		lib.SetViewDescription = (SetViewDescriptionPtr)(GetProcAddress(lib.handle, "RT64_SetViewDescription"));

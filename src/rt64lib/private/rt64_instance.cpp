@@ -4,6 +4,8 @@
 
 #ifndef RT64_MINIMAL
 
+#include <cstring>
+
 #include "../public/rt64.h"
 #include "rt64_instance.h"
 #include "rt64_scene.h"
@@ -24,6 +26,9 @@ RT64::Instance::Instance(Scene *scene) {
 	bumpTexture = nullptr;
 	transform = XMMatrixIdentity();
 	previousTransform = XMMatrixIdentity();
+	normalMatrix = XMMatrixIdentity();
+	memset(lastTransformRaw, 0, sizeof(lastTransformRaw));
+	lastTransformRawValid = false;
 	material = DefaultMaterial;
 	shader = nullptr;
 	scissorRect = { 0, 0, 0, 0 };
@@ -111,11 +116,32 @@ inline XMMATRIX matrixFromFloats(const float m[4][4]) {
 }
 
 void RT64::Instance::setTransform(const float m[4][4]) {
+	if (lastTransformRawValid && (memcmp(lastTransformRaw, m, sizeof(lastTransformRaw)) == 0)) {
+		return;
+	}
+
+	memcpy(lastTransformRaw, m, sizeof(lastTransformRaw));
+	lastTransformRawValid = true;
 	transform = matrixFromFloats(m);
+	XMMATRIX upper3x3 = transform;
+	upper3x3.r[0].m128_f32[3] = 0.f;
+	upper3x3.r[1].m128_f32[3] = 0.f;
+	upper3x3.r[2].m128_f32[3] = 0.f;
+	upper3x3.r[3].m128_f32[0] = 0.f;
+	upper3x3.r[3].m128_f32[1] = 0.f;
+	upper3x3.r[3].m128_f32[2] = 0.f;
+	upper3x3.r[3].m128_f32[3] = 1.f;
+
+	XMVECTOR det;
+	normalMatrix = XMMatrixTranspose(XMMatrixInverse(&det, upper3x3));
 }
 
 XMMATRIX RT64::Instance::getTransform() const {
 	return transform;
+}
+
+XMMATRIX RT64::Instance::getNormalMatrix() const {
+	return normalMatrix;
 }
 
 void RT64::Instance::setPreviousTransform(const float m[4][4]) {

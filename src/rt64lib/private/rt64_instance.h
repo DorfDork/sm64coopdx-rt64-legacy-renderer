@@ -29,6 +29,9 @@ namespace RT64 {
 		Texture* bumpTexture;
 		XMMATRIX transform;
 		XMMATRIX previousTransform;
+		XMMATRIX normalMatrix;
+		float lastTransformRaw[4][4];
+		bool lastTransformRawValid;
 		RT64_MATERIAL material;
 		Shader *shader;
 		RT64_RECT scissorRect;
@@ -57,6 +60,7 @@ namespace RT64 {
 		Texture* getBumpTexture() const;
 		void setTransform(const float m[4][4]);
 		XMMATRIX getTransform() const;
+		XMMATRIX getNormalMatrix() const;
 		void setPreviousTransform(const float m[4][4]);
 		XMMATRIX getPreviousTransform() const;
 		void setScissorRect(const RT64_RECT &rect);

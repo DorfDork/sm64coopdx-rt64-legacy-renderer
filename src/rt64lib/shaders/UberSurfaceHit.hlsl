@@ -85,30 +85,6 @@ void UberSurfaceAnyHit(inout HitInfo payload, Attributes attrib) {
 	float3 vertexTangent = float3(0.0f, 0.0f, 0.0f);
 	float3 vertexBinormal = float3(0.0f, 0.0f, 0.0f);
 
-	if (hasNormalMap || hasBumpMap) {
-		float uva = uv1.x - uv0.x;
-		float uvb = uv2.x - uv0.x;
-		float uvc = uv1.y - uv0.y;
-		float uvd = uv2.y - uv0.y;
-		float uvk = uvb * uvc - uva * uvd;
-		float3 dpos1 = pos1 - pos0;
-		float3 dpos2 = pos2 - pos0;
-		if (uvk != 0) vertexTangent = normalize((uvc * dpos2 - uvd * dpos1) / uvk);
-		else {
-			if (uva != 0) vertexTangent = normalize(dpos1 / uva);
-			else if (uvb != 0) vertexTangent = normalize(dpos2 / uvb);
-			else vertexTangent = 0.0f;
-		}
-
-		float2 duv1 = uv1 - uv0;
-		float2 duv2 = uv2 - uv1;
-		duv1.y = -duv1.y;
-		duv2.y = -duv2.y;
-		float3 cr = cross(float3(duv1.xy, 0.0f), float3(duv2.xy, 0.0f));
-		float binormalMult = (cr.z < 0.0f) ? -1.0f : 1.0f;
-		vertexBinormal = cross(vertexTangent, vertexNormal) * binormalMult;
-	}
-
 	// Texture differentials.
 	float2 ddx = float2(0.0f, 0.0f);
 	float2 ddy = float2(0.0f, 0.0f);
@@ -168,6 +144,30 @@ void UberSurfaceAnyHit(inout HitInfo payload, Attributes attrib) {
 		payload.opaqueT = min(payload.opaqueT, RayTCurrent());
 	}
 
+	if (hasNormalMap || hasBumpMap) {
+		float uva = uv1.x - uv0.x;
+		float uvb = uv2.x - uv0.x;
+		float uvc = uv1.y - uv0.y;
+		float uvd = uv2.y - uv0.y;
+		float uvk = uvb * uvc - uva * uvd;
+		float3 dpos1 = pos1 - pos0;
+		float3 dpos2 = pos2 - pos0;
+		if (uvk != 0) vertexTangent = normalize((uvc * dpos2 - uvd * dpos1) / uvk);
+		else {
+			if (uva != 0) vertexTangent = normalize(dpos1 / uva);
+			else if (uvb != 0) vertexTangent = normalize(dpos2 / uvb);
+			else vertexTangent = 0.0f;
+		}
+
+		float2 duv1 = uv1 - uv0;
+		float2 duv2 = uv2 - uv1;
+		duv1.y = -duv1.y;
+		duv2.y = -duv2.y;
+		float3 cr = cross(float3(duv1.xy, 0.0f), float3(duv2.xy, 0.0f));
+		float binormalMult = (cr.z < 0.0f) ? -1.0f : 1.0f;
+		vertexBinormal = cross(vertexTangent, vertexNormal) * binormalMult;
+	}
+
 	vertexNormal = normalize(mul(instanceTransforms[instanceId].objectToWorldNormal, float4(vertexNormal, 0.f)).xyz);
 	float normalSign = (dot(triangleNormal, WorldRayDirection()) <= 0.0f) ? 1.0f : -1.0f;
 	vertexNormal *= normalSign;
@@ -205,9 +205,6 @@ void UberSurfaceAnyHit(inout HitInfo payload, Attributes attrib) {
 		}
 	}
 
-	float3 prevWorldPos = mul(instanceTransforms[instanceId].objectToWorldPrevious, float4(vertexPosition, 1.0f)).xyz;
-	float3 curWorldPos = mul(instanceTransforms[instanceId].objectToWorld, float4(vertexPosition, 1.0f)).xyz;
-	float3 vertexFlow = curWorldPos - prevWorldPos;
 	float3 vertexSpecular = float3(1.0f, 1.0f, 1.0f);
 	if (hasSpecularMap) {
 		int specularTexIndex = material.specularTexIndex;
@@ -232,6 +229,9 @@ void UberSurfaceAnyHit(inout HitInfo payload, Attributes attrib) {
 
 	uint hitPos = hi / hitStride;
 	if (hitPos < MAX_HIT_QUERIES) {
+		float3 prevWorldPos = mul(instanceTransforms[instanceId].objectToWorldPrevious, float4(vertexPosition, 1.0f)).xyz;
+		float3 curWorldPos = mul(instanceTransforms[instanceId].objectToWorld, float4(vertexPosition, 1.0f)).xyz;
+		float3 vertexFlow = curWorldPos - prevWorldPos;
 		gHitDistAndFlow[hi] = float4(tval, vertexFlow);
 		gHitColor[hi] = resultColor;
 		gHitNormal[hi] = float4(vertexNormal, 1.0f);

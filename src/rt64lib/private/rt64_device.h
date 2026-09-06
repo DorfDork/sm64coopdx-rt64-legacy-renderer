@@ -22,6 +22,7 @@ namespace RT64 {
 	class Inspector;
 	class Texture;
 	class Mipmaps;
+	class Mesh;
 
 	class Device {
 	public:
@@ -134,6 +135,8 @@ namespace RT64 {
 		D3D12_RESOURCE_BARRIER lastCopyQueueBarrier;
 		bool lastCopyQueueBarrierActive;
 		bool disableMipmaps;
+		bool meshBatchActive;
+		std::vector<Mesh *> pendingBLASBuilds;
 
 		void updateSize();
 		void releaseRTVs();
@@ -221,7 +224,12 @@ namespace RT64 {
 		void flushPendingBarriers();
 		void removePendingBarriersForResource(ID3D12Resource *resource);
 		void setLastCommandQueueBarrier(const D3D12_RESOURCE_BARRIER &barrier);
+		void setLastCommandQueueUAVBarrier(ID3D12Resource *resource);
 		void submitCommandQueueBarrier();
+		void beginMeshBatch();
+		void endMeshBatch();
+		bool isMeshBatchActive() const;
+		void queueBottomLevelASBuild(Mesh *mesh);
 		void setLastCopyQueueBarrier(const D3D12_RESOURCE_BARRIER &barrier);
 		void submitCopyQueueBarrier();
 		int getWidth() const;

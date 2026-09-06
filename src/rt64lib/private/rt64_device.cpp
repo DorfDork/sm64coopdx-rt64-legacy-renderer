@@ -13,6 +13,7 @@
 
 #ifndef RT64_MINIMAL
 
+#include "rt64_mesh.h"
 #include "rt64_mipmaps.h"
 #include "rt64_inspector.h"
 #include "rt64_scene.h"
@@ -65,6 +66,7 @@ RT64::Device::Device(HWND hwnd) {
 	d3dRtStateObject = nullptr;
 	lastCommandQueueBarrierActive = false;
 	lastCopyQueueBarrierActive = false;
+	meshBatchActive = false;
 	d3dRenderTargets[0] = nullptr;
 	d3dRenderTargets[1] = nullptr;
 	d3dRenderTargetReadbackRowWidth = 0;
@@ -620,6 +622,44 @@ void RT64::Device::removePendingBarriersForResource(ID3D12Resource *resource) {
 void RT64::Device::setLastCommandQueueBarrier(const D3D12_RESOURCE_BARRIER &barrier) {
 	lastCommandQueueBarrier = barrier;
 	lastCommandQueueBarrierActive = true;
+}
+
+void RT64::Device::setLastCommandQueueUAVBarrier(ID3D12Resource *resource) {
+	D3D12_RESOURCE_BARRIER barrier;
+	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_UAV;
+	barrier.UAV.pResource = resource;
+	barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+	setLastCommandQueueBarrier(barrier);
+}
+
+void RT64::Device::beginMeshBatch() {
+	meshBatchActive = true;
+}
+
+bool RT64::Device::isMeshBatchActive() const {
+	return meshBatchActive;
+}
+
+void RT64::Device::queueBottomLevelASBuild(Mesh *mesh) {
+	pendingBLASBuilds.push_back(mesh);
+}
+
+void RT64::Device::endMeshBatch() {
+	meshBatchActive = false;
+
+	if (pendingBLASBuilds.empty()) {
+		return;
+	}
+
+	flushPendingBarriers();
+
+	for (Mesh *mesh : pendingBLASBuilds) {
+		mesh->generateBatchedBottomLevelAS();
+	}
+
+	pendingBLASBuilds.clear();
+
+	setLastCommandQueueUAVBarrier(nullptr);
 }
 
 void RT64::Device::submitCommandQueueBarrier() {
@@ -1890,6 +1930,24 @@ DLLEXPORT void RT64_DrawDevice(RT64_DEVICE *devicePtr, int vsyncInterval, float 
 	try {
 		RT64::Device *device = (RT64::Device *)(devicePtr);
 		device->draw(vsyncInterval, deltaTimeMs);
+	}
+	RT64_CATCH_EXCEPTION();
+}
+
+DLLEXPORT void RT64_BeginMeshBatch(RT64_DEVICE *devicePtr) {
+	assert(devicePtr != nullptr);
+	try {
+		RT64::Device *device = (RT64::Device *)(devicePtr);
+		device->beginMeshBatch();
+	}
+	RT64_CATCH_EXCEPTION();
+}
+
+DLLEXPORT void RT64_EndMeshBatch(RT64_DEVICE *devicePtr) {
+	assert(devicePtr != nullptr);
+	try {
+		RT64::Device *device = (RT64::Device *)(devicePtr);
+		device->endMeshBatch();
 	}
 	RT64_CATCH_EXCEPTION();
 }

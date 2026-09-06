@@ -126,21 +126,29 @@ void RT64::Mesh::updateIndexBuffer(unsigned int *indexArray, int indexCount) {
 
 void RT64::Mesh::updateBottomLevelAS() {
 	if (flags & RT64_MESH_RAYTRACE_ENABLED) {
+		if (device->isMeshBatchActive()) {
+			device->queueBottomLevelASBuild(this);
+			return;
+		}
+
 		// Create and store the bottom level AS buffers.
 		createBottomLevelAS({ { getVertexBuffer(), getVertexCount() } }, { { getIndexBuffer(), getIndexCount() } });
 
 		// Submit this result as the last barrier for the command queue.
-		D3D12_RESOURCE_BARRIER barrier;
-		barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_UAV;
-		barrier.UAV.pResource = d3dBottomLevelASBuffers.result.Get();
-		barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-		device->setLastCommandQueueBarrier(barrier);
+		device->setLastCommandQueueUAVBarrier(d3dBottomLevelASBuffers.result.Get());
 	}
+}
+
+void RT64::Mesh::generateBatchedBottomLevelAS() {
+	generateBottomLevelAS({ { getVertexBuffer(), getVertexCount() } }, { { getIndexBuffer(), getIndexCount() } });
 }
 
 void RT64::Mesh::createBottomLevelAS(std::vector<std::pair<ID3D12Resource *, uint32_t>> vVertexBuffers, std::vector<std::pair<ID3D12Resource *, uint32_t>> vIndexBuffers) {
 	device->flushPendingBarriers();
+	generateBottomLevelAS(vVertexBuffers, vIndexBuffers);
+}
 
+void RT64::Mesh::generateBottomLevelAS(std::vector<std::pair<ID3D12Resource *, uint32_t>> vVertexBuffers, std::vector<std::pair<ID3D12Resource *, uint32_t>> vIndexBuffers) {
 	bool updatable = flags & RT64_MESH_RAYTRACE_UPDATABLE;
 	bool fastTrace = flags & RT64_MESH_RAYTRACE_FAST_TRACE;
 	bool compact = flags & RT64_MESH_RAYTRACE_COMPACT;

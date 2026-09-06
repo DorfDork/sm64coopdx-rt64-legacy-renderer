@@ -26,6 +26,7 @@ namespace RT64 {
 		int flags;
 
 		void createBottomLevelAS(std::vector<std::pair<ID3D12Resource *, uint32_t>> vVertexBuffers, std::vector<std::pair<ID3D12Resource *, uint32_t>> vIndexBuffers);
+		void generateBottomLevelAS(std::vector<std::pair<ID3D12Resource *, uint32_t>> vVertexBuffers, std::vector<std::pair<ID3D12Resource *, uint32_t>> vIndexBuffers);
 	public:
 		Mesh(Device *device, int flags);
 		virtual ~Mesh();
@@ -40,6 +41,7 @@ namespace RT64 {
 		const D3D12_INDEX_BUFFER_VIEW *getIndexBufferView() const;
 		int getIndexCount() const;
 		void updateBottomLevelAS();
+		void generateBatchedBottomLevelAS();
 		ID3D12Resource *getBottomLevelASResult() const;
 	};
 };
