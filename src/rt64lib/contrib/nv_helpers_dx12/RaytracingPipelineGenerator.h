@@ -76,8 +76,8 @@ class RayTracingPipelineGenerator
 {
 public:
   /// The pipeline helper requires access to the device, as well as the
-  /// raytracing device prior to Windows 10 RS5.
-  RayTracingPipelineGenerator(ID3D12Device8* device);
+  /// raytracing device prior to Windows 10 RS5. Also to the global root signature holding the resources shared by every shader.
+  RayTracingPipelineGenerator(ID3D12Device8 *device, ID3D12RootSignature *globalRootSignature);
 
   /// Add a DXIL library to the pipeline. Note that this library has to be
   /// compiled with dxc, using a lib_6_3 target. The exported symbols must correspond exactly to the
@@ -168,14 +168,6 @@ private:
     D3D12_SUBOBJECT_TO_EXPORTS_ASSOCIATION m_association = {};
   };
 
-  /// The pipeline creation requires having at least one empty global and local root signatures, so
-  /// we systematically create both
-  void CreateDummyRootSignatures();
-
-  /// Build a list containing the export symbols for the ray generation shaders, miss shaders, and
-  /// hit group names
-  void BuildShaderExportList(std::vector<std::wstring>& exportedSymbols);
-
   std::vector<Library> m_libraries = {};
   std::vector<HitGroup> m_hitGroups = {};
   std::vector<RootSignatureAssociation> m_rootSignatureAssociations = {};
@@ -188,8 +180,7 @@ private:
   UINT m_maxRecursionDepth = 1;
 
   ID3D12Device8* m_device;
-  ID3D12RootSignature* m_dummyLocalRootSignature;
-  ID3D12RootSignature* m_dummyGlobalRootSignature;
+  ID3D12RootSignature *m_globalRootSignature;
 
   
 };

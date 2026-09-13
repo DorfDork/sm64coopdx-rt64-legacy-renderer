@@ -17,6 +17,7 @@ RT64::Mesh::Mesh(Device *device, int flags) {
 	vertexCount = 0;
 	indexCount = 0;
 	vertexStride = 0;
+	bottomLevelASRefits = 0;
 }
 
 RT64::Mesh::~Mesh() {
@@ -41,6 +42,7 @@ UINT8 *RT64::Mesh::beginVertexBufferUpdate(int vertexCount, int vertexStride) {
 
 		// Discard the BLAS since it won't be compatible anymore even if it's updatable.
 		d3dBottomLevelASBuffers.Release();
+		bottomLevelASRefits = 0;
 	}
 
 	if (vertexBuffer.IsNull()) {
@@ -92,6 +94,7 @@ void RT64::Mesh::updateIndexBuffer(unsigned int *indexArray, int indexCount) {
 
 		// Discard the BLAS since it won't be compatible anymore even if it's updatable.
 		d3dBottomLevelASBuffers.Release();
+		bottomLevelASRefits = 0;
 	}
 
 	if (indexBuffer.IsNull()) {
@@ -177,7 +180,10 @@ void RT64::Mesh::generateBottomLevelAS(std::vector<std::pair<ID3D12Resource *, u
 		d3dBottomLevelASBuffers.result = device->allocateBuffer(D3D12_HEAP_TYPE_DEFAULT, resultSizeInBytes, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE);
 	}
 
-	bottomLevelAS.Generate(device->getD3D12CommandList(), d3dBottomLevelASBuffers.scratch.Get(), d3dBottomLevelASBuffers.result.Get(), (previousResult != nullptr), previousResult);
+	const unsigned int BottomLevelASFullRebuildInterval = 32;
+	const bool refitInPlace = (previousResult != nullptr) && (bottomLevelASRefits < BottomLevelASFullRebuildInterval);
+	bottomLevelASRefits = refitInPlace ? (bottomLevelASRefits + 1) : 0;
+	bottomLevelAS.Generate(device->getD3D12CommandList(), d3dBottomLevelASBuffers.scratch.Get(), d3dBottomLevelASBuffers.result.Get(), refitInPlace, refitInPlace ? previousResult : nullptr);
 }
 
 ID3D12Resource *RT64::Mesh::getVertexBuffer() const {

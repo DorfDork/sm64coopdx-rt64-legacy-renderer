@@ -80,12 +80,10 @@ RT64::Device::Device(HWND hwnd) {
 	d3dUberSurfaceHitLibrary = nullptr;
 	d3dUberShadowHitLibrary = nullptr;
 	d3dUberHitSignature = nullptr;
-	d3dUberShadowHitSignature = nullptr;
 	d3dUberRasterSignature = nullptr;
 	d3dUberRasterPipelineState = nullptr;
 	d3dCustomRasterSignature = nullptr;
 	d3dCustomHitSignature = nullptr;
-	d3dCustomShadowHitSignature = nullptr;
 	d3dRtStateObjectDirty = false;
 	customShaderSettleFrames = 0;
 	d3dCustomPostProcessPipelineState = nullptr;
@@ -113,7 +111,7 @@ RT64::Device::Device(HWND hwnd) {
 	mipmaps = nullptr;
 	disableMipmaps = false;
 	d3dRtStateObjectProps = nullptr;
-	d3dRayGenSignature = nullptr;
+	d3dRtGlobalRootSignature = nullptr;
 	d3dDxcCompiler = nullptr;
 	d3dDxcLibrary = nullptr;
 	d3dComposeRootSignature = nullptr;
@@ -189,16 +187,14 @@ RT64::Device::~Device() {
 
 	ReleaseCom(&d3dRtStateObjectProps);
 	ReleaseCom(&d3dRtStateObject);
-	ReleaseCom(&d3dRayGenSignature);
+	ReleaseCom(&d3dRtGlobalRootSignature);
 	ReleaseCom(&d3dUberSurfaceHitLibrary);
 	ReleaseCom(&d3dUberShadowHitLibrary);
 	ReleaseCom(&d3dUberHitSignature);
-	ReleaseCom(&d3dUberShadowHitSignature);
 	ReleaseCom(&d3dUberRasterSignature);
 	ReleaseCom(&d3dUberRasterPipelineState);
 	ReleaseCom(&d3dCustomRasterSignature);
 	ReleaseCom(&d3dCustomHitSignature);
-	ReleaseCom(&d3dCustomShadowHitSignature);
 	ReleaseCom(&d3dCustomPostProcessPipelineState);
 	ReleaseCom(&d3dPrimaryRayGenLibrary);
 	ReleaseCom(&d3dDirectRayGenLibrary);
@@ -326,16 +322,7 @@ void RT64::Device::createRaytracingDevice() {
 			else {
 				handleAdapterError("No D3D12.1 feature level support.");
 				ss << "D3D12CreateDevice error code: " << std::hex << deviceResult << std::endl;
-			}
-
-#		ifndef RT64_MINIMAL
-			// FIXME: Work around AMD's mipmap generation being corrupted until a solution is found.
-			// Refer to https://github.com/DarioSamo/RT64/issues/54
-			if (wcsstr(desc.Description, L"AMD") != nullptr) {
-				disableMipmaps = true;
-			}
-#		endif
-		}
+			}		}
 	}
 
 	// Only throw an exception if no device was detected.
@@ -462,6 +449,10 @@ ID3D12StateObject *RT64::Device::getD3D12RtStateObject() const {
 
 ID3D12StateObjectProperties *RT64::Device::getD3D12RtStateObjectProperties() const {
 	return d3dRtStateObjectProps;
+}
+
+ID3D12RootSignature *RT64::Device::getD3D12RtGlobalRootSignature(void) const {
+	return d3dRtGlobalRootSignature;
 }
 
 ID3D12Resource *RT64::Device::getD3D12RenderTarget() const {
@@ -1133,7 +1124,9 @@ void RT64::Device::createRaytracingPipeline() {
 	ReleaseCom(&d3dRtStateObject);
 	ReleaseCom(&d3dRtStateObjectProps);
 
-	nv_helpers_dx12::RayTracingPipelineGenerator pipeline(d3dDevice);
+	if (d3dRtGlobalRootSignature == nullptr) { d3dRtGlobalRootSignature = createRtGlobalRootSignature(); }
+
+	nv_helpers_dx12::RayTracingPipelineGenerator pipeline(d3dDevice, d3dRtGlobalRootSignature);
 
 	RT64_LOG_PRINTF("Loading shader libraries");
 
@@ -1184,17 +1177,16 @@ void RT64::Device::createRaytracingPipeline() {
 
 	RT64_LOG_PRINTF("Creating root signatures");
 
-	if (d3dRayGenSignature == nullptr) { d3dRayGenSignature = createRayGenSignature(); }
-	if (d3dUberHitSignature == nullptr) { d3dUberHitSignature = createUberHitSignature(true); }
-	if (d3dUberShadowHitSignature == nullptr) { d3dUberShadowHitSignature = createUberHitSignature(false); }
-	if (d3dCustomHitSignature == nullptr) { d3dCustomHitSignature = createCustomHitSignature(true); }
-	if (d3dCustomShadowHitSignature == nullptr) { d3dCustomShadowHitSignature = createCustomHitSignature(false); }
+	if (d3dUberHitSignature == nullptr) { d3dUberHitSignature = createUberHitSignature(); }
+	if (d3dCustomHitSignature == nullptr) { d3dCustomHitSignature = createCustomHitSignature(); }
 
-	RT64_LOG_PRINTF("Adding hit groups");
+	RT64_LOG_PRINTF("Adding hit groups and root signature associations");
 
 	pipeline.AddHitGroup(L"UberSurfaceHitGroup", L"UberSurfaceClosestHit", L"UberSurfaceAnyHit");
 	pipeline.AddHitGroup(L"UberShadowHitGroup", L"UberShadowClosestHit", L"UberShadowAnyHit");
+	pipeline.AddRootSignatureAssociation(d3dUberHitSignature, { L"UberSurfaceHitGroup", L"UberSurfaceClosestHit", L"UberSurfaceAnyHit", L"UberShadowHitGroup", L"UberShadowClosestHit", L"UberShadowAnyHit" });
 
+	std::vector<std::wstring> customHitSymbols;
 	std::set<uint64_t> addedCustomShaders;
 	for (Shader *customShader : customShaders) {
 		Shader::HitGroup &surface = customShader->getSurfaceHitGroup();
@@ -1211,29 +1203,11 @@ void RT64::Device::createRaytracingPipeline() {
 		pipeline.AddLibrary(shadow.blob, { shadow.closestHitName.c_str(), shadow.anyHitName.c_str() });
 		pipeline.AddHitGroup(surface.hitGroupName.c_str(), surface.closestHitName.c_str(), surface.anyHitName.c_str());
 		pipeline.AddHitGroup(shadow.hitGroupName.c_str(), shadow.closestHitName.c_str(), shadow.anyHitName.c_str());
+		customHitSymbols.insert(customHitSymbols.end(), { surface.hitGroupName, surface.closestHitName, surface.anyHitName, shadow.hitGroupName, shadow.closestHitName, shadow.anyHitName });
 	}
 
-	RT64_LOG_PRINTF("Adding root signature associations");
-
-	// Associate the root signatures to the hit groups.
-	pipeline.AddRootSignatureAssociation(d3dRayGenSignature, { L"PrimaryRayGen", L"DirectRayGen", L"IndirectRayGen", L"ReflectionRayGen", L"RefractionRayGen", L"VolumetricRayGen" });
-	pipeline.AddRootSignatureAssociation(d3dUberHitSignature, { L"UberSurfaceHitGroup" });
-	pipeline.AddRootSignatureAssociation(d3dUberShadowHitSignature, { L"UberShadowHitGroup" });
-
-	addedCustomShaders.clear();
-	for (Shader *customShader : customShaders) {
-		Shader::HitGroup &surface = customShader->getSurfaceHitGroup();
-		Shader::HitGroup &shadow = customShader->getShadowHitGroup();
-		if ((surface.blob == nullptr) || (shadow.blob == nullptr)) {
-			continue;
-		}
-
-		if (!addedCustomShaders.insert(customShader->getCustomSourceHash()).second) {
-			continue;
-		}
-
-		pipeline.AddRootSignatureAssociation(d3dCustomHitSignature, { surface.hitGroupName.c_str() });
-		pipeline.AddRootSignatureAssociation(d3dCustomShadowHitSignature, { shadow.hitGroupName.c_str() });
+	if (!customHitSymbols.empty()) {
+		pipeline.AddRootSignatureAssociation(d3dCustomHitSignature, customHitSymbols);
 	}
 
 	// Pipeline configuration. Path tracing only needs one recursion level at most.
@@ -1306,7 +1280,7 @@ void RT64::Device::createDxcCompiler() {
 	RT64_LOG_PRINTF("Compiler creation finished");
 }
 
-ID3D12RootSignature *RT64::Device::createRayGenSignature() {
+ID3D12RootSignature *RT64::Device::createRtGlobalRootSignature(void) {
 	nv_helpers_dx12::RootSignatureGenerator rsc;
 
 	// Fill out the heap parameters.
@@ -1320,6 +1294,10 @@ ID3D12RootSignature *RT64::Device::createRayGenSignature() {
 		{ SRV_INDEX(gBlueNoise), 1, 0, D3D12_DESCRIPTOR_RANGE_TYPE_SRV, HEAP_INDEX(gBlueNoise) },
 		{ SRV_INDEX(gTextures), SRV_TEXTURES_MAX, 0, D3D12_DESCRIPTOR_RANGE_TYPE_SRV, HEAP_INDEX(gTextures) },
 		{ CBV_INDEX(gParams), 1, 0, D3D12_DESCRIPTOR_RANGE_TYPE_CBV, HEAP_INDEX(gParams) }
+	});
+
+	rsc.AddHeapRangesParameter({
+		{ 1, RT64_SAMPLER_HEAP_COUNT, 0, D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 0 }
 	});
 
 	// Fill out the samplers.
@@ -1338,37 +1316,13 @@ ID3D12RootSignature *RT64::Device::createRayGenSignature() {
 	desc.ShaderRegister = 0;
 	desc.RegisterSpace = 0;
 
-	return rsc.Generate(d3dDevice, true, false, &desc, 1);
+	return rsc.Generate(d3dDevice, false, false, &desc, 1);
 }
 
-ID3D12RootSignature *RT64::Device::createCustomHitSignature(bool hitBuffers) {
+ID3D12RootSignature *RT64::Device::createCustomHitSignature(void) {
 	nv_helpers_dx12::RootSignatureGenerator rsc;
 	rsc.AddRootParameter(D3D12_ROOT_PARAMETER_TYPE_SRV, SRV_INDEX(vertexBuffer));
 	rsc.AddRootParameter(D3D12_ROOT_PARAMETER_TYPE_SRV, SRV_INDEX(indexBuffer));
-
-	{
-		nv_helpers_dx12::RootSignatureGenerator::HeapRanges heapRanges;
-
-		if (hitBuffers) {
-			heapRanges.push_back({ UAV_INDEX(gHitDistAndFlow), 1, 0, D3D12_DESCRIPTOR_RANGE_TYPE_UAV, HEAP_INDEX(gHitDistAndFlow) });
-			heapRanges.push_back({ UAV_INDEX(gHitColor), 1, 0, D3D12_DESCRIPTOR_RANGE_TYPE_UAV, HEAP_INDEX(gHitColor) });
-			heapRanges.push_back({ UAV_INDEX(gHitNormal), 1, 0, D3D12_DESCRIPTOR_RANGE_TYPE_UAV, HEAP_INDEX(gHitNormal) });
-			heapRanges.push_back({ UAV_INDEX(gHitSpecular), 1, 0, D3D12_DESCRIPTOR_RANGE_TYPE_UAV, HEAP_INDEX(gHitSpecular) });
-			heapRanges.push_back({ UAV_INDEX(gHitInstanceId), 1, 0, D3D12_DESCRIPTOR_RANGE_TYPE_UAV, HEAP_INDEX(gHitInstanceId) });
-		}
-
-		heapRanges.push_back({ SRV_INDEX(instanceTransforms), 1, 0, D3D12_DESCRIPTOR_RANGE_TYPE_SRV, HEAP_INDEX(instanceTransforms) });
-		heapRanges.push_back({ SRV_INDEX(instanceMaterials), 1, 0, D3D12_DESCRIPTOR_RANGE_TYPE_SRV, HEAP_INDEX(instanceMaterials) });
-		heapRanges.push_back({ SRV_INDEX(gTextures), SRV_TEXTURES_MAX, 0, D3D12_DESCRIPTOR_RANGE_TYPE_SRV, HEAP_INDEX(gTextures) });
-		heapRanges.push_back({ CBV_INDEX(gParams), 1, 0, D3D12_DESCRIPTOR_RANGE_TYPE_CBV, HEAP_INDEX(gParams) });
-		rsc.AddHeapRangesParameter(heapRanges);
-	}
-
-	{
-		nv_helpers_dx12::RootSignatureGenerator::HeapRanges samplerHeapRange;
-		samplerHeapRange.push_back({ 1, RT64_SAMPLER_HEAP_COUNT, 0, D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 0 });
-		rsc.AddHeapRangesParameter(samplerHeapRange);
-	}
 
 	for (unsigned int i = 1; i < RT64_MAX_SHADER_UNIFORM_BLOCKS; i++) {
 		rsc.AddRootParameter(D3D12_ROOT_PARAMETER_TYPE_CBV, i);
@@ -1377,35 +1331,10 @@ ID3D12RootSignature *RT64::Device::createCustomHitSignature(bool hitBuffers) {
 	return rsc.Generate(d3dDevice, true, false, nullptr, 0);
 }
 
-ID3D12RootSignature *RT64::Device::createUberHitSignature(bool hitBuffers) {
+ID3D12RootSignature *RT64::Device::createUberHitSignature(void) {
 	nv_helpers_dx12::RootSignatureGenerator rsc;
 	rsc.AddRootParameter(D3D12_ROOT_PARAMETER_TYPE_SRV, SRV_INDEX(vertexBuffer));
 	rsc.AddRootParameter(D3D12_ROOT_PARAMETER_TYPE_SRV, SRV_INDEX(indexBuffer));
-
-	{
-		nv_helpers_dx12::RootSignatureGenerator::HeapRanges heapRanges;
-
-		if (hitBuffers) {
-			heapRanges.push_back({ UAV_INDEX(gHitDistAndFlow), 1, 0, D3D12_DESCRIPTOR_RANGE_TYPE_UAV, HEAP_INDEX(gHitDistAndFlow) });
-			heapRanges.push_back({ UAV_INDEX(gHitColor), 1, 0, D3D12_DESCRIPTOR_RANGE_TYPE_UAV, HEAP_INDEX(gHitColor) });
-			heapRanges.push_back({ UAV_INDEX(gHitNormal), 1, 0, D3D12_DESCRIPTOR_RANGE_TYPE_UAV, HEAP_INDEX(gHitNormal) });
-			heapRanges.push_back({ UAV_INDEX(gHitSpecular), 1, 0, D3D12_DESCRIPTOR_RANGE_TYPE_UAV, HEAP_INDEX(gHitSpecular) });
-			heapRanges.push_back({ UAV_INDEX(gHitInstanceId), 1, 0, D3D12_DESCRIPTOR_RANGE_TYPE_UAV, HEAP_INDEX(gHitInstanceId) });
-		}
-
-		heapRanges.push_back({ SRV_INDEX(instanceTransforms), 1, 0, D3D12_DESCRIPTOR_RANGE_TYPE_SRV, HEAP_INDEX(instanceTransforms) });
-		heapRanges.push_back({ SRV_INDEX(instanceMaterials), 1, 0, D3D12_DESCRIPTOR_RANGE_TYPE_SRV, HEAP_INDEX(instanceMaterials) });
-		heapRanges.push_back({ SRV_INDEX(gTextures), SRV_TEXTURES_MAX, 0, D3D12_DESCRIPTOR_RANGE_TYPE_SRV, HEAP_INDEX(gTextures) });
-		heapRanges.push_back({ CBV_INDEX(gParams), 1, 0, D3D12_DESCRIPTOR_RANGE_TYPE_CBV, HEAP_INDEX(gParams) });
-		rsc.AddHeapRangesParameter(heapRanges);
-	}
-
-	{
-		nv_helpers_dx12::RootSignatureGenerator::HeapRanges samplerHeapRange;
-		samplerHeapRange.push_back({ 1, RT64_SAMPLER_HEAP_COUNT, 0, D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 0 });
-		rsc.AddHeapRangesParameter(samplerHeapRange);
-	}
-
 	return rsc.Generate(d3dDevice, true, false, nullptr, 0);
 }
 

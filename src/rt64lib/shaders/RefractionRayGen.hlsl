@@ -40,6 +40,12 @@ void RefractionRayGen() {
 	float4 skyColor = SampleSky2D(screenUV);
 	bgColor = lerp(bgColor, skyColor.rgb, skyColor.a);
 
+	// I believe tracing a ray with no direction will hang on AMD GPUs, so write what the miss produced.
+	if (!(dot(rayDirection, rayDirection) > EPSILON)) {
+		gRefraction[launchIndex].rgb += bgColor * refractionAlpha;
+		return;
+	}
+
 	// Ray differential.
 	RayDiff rayDiff;
 	rayDiff.dDdx = float3(0.0f, 0.0f, 0.0f);

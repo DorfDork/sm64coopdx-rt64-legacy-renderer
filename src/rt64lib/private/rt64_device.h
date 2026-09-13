@@ -102,7 +102,7 @@ namespace RT64 {
 		void *surfaceMissID;
 		void *shadowMissID;
 		Texture *blueNoise;
-		ID3D12RootSignature *d3dRayGenSignature;
+		ID3D12RootSignature *d3dRtGlobalRootSignature;
 		ID3D12PipelineState *im3dPipelineStatePoint;
 		ID3D12PipelineState *im3dPipelineStateLine;
 		ID3D12PipelineState *im3dPipelineStateTriangle;
@@ -113,7 +113,6 @@ namespace RT64 {
 		IDxcBlob *d3dUberSurfaceHitLibrary;
 		IDxcBlob *d3dUberShadowHitLibrary;
 		ID3D12RootSignature *d3dUberHitSignature;
-		ID3D12RootSignature *d3dUberShadowHitSignature;
 		ID3D12RootSignature *d3dUberRasterSignature;
 		ID3D12PipelineState *d3dUberRasterPipelineState;
 		void *surfaceHitGroupID;
@@ -167,11 +166,10 @@ namespace RT64 {
 		void createRaytracingPipeline();
 		void fallBackFromCustomShaders();
 		void createDxcCompiler();
-		ID3D12RootSignature *createRayGenSignature();
-		ID3D12RootSignature *createUberHitSignature(bool hitBuffers);
-		ID3D12RootSignature *createCustomHitSignature(bool hitBuffers);
+		ID3D12RootSignature *createRtGlobalRootSignature(void);
+		ID3D12RootSignature *createUberHitSignature(void);
+		ID3D12RootSignature *createCustomHitSignature(void);
 		ID3D12RootSignature *d3dCustomHitSignature;
-		ID3D12RootSignature *d3dCustomShadowHitSignature;
 		ID3D12RootSignature *createUberRasterSignature();
 		void createUberRasterPipeline();
 		void preRender();
@@ -194,6 +192,7 @@ namespace RT64 {
 		ID3D12GraphicsCommandList4 *getD3D12CommandList() const;
 		ID3D12StateObject *getD3D12RtStateObject() const;
 		ID3D12StateObjectProperties *getD3D12RtStateObjectProperties() const;
+		ID3D12RootSignature *getD3D12RtGlobalRootSignature(void) const;
 		ID3D12Resource *getD3D12RenderTarget() const;
 		CD3DX12_CPU_DESCRIPTOR_HANDLE getD3D12RTV() const;
 		IDXGISwapChain3 *getD3D12SwapChain() const;

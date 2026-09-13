@@ -23,6 +23,7 @@ namespace RT64 {
 		int vertexStride;
 		int indexCount;
 		RT64::AccelerationStructureBuffers d3dBottomLevelASBuffers;
+		unsigned int bottomLevelASRefits;
 		int flags;
 
 		void createBottomLevelAS(std::vector<std::pair<ID3D12Resource *, uint32_t>> vVertexBuffers, std::vector<std::pair<ID3D12Resource *, uint32_t>> vIndexBuffers);

@@ -42,7 +42,6 @@ compiling in debug mode.
 #include "RaytracingPipelineGenerator.h"
 
 #include "dxcapi.h"
-#include <unordered_set>
 #include <stdexcept>
 
 namespace nv_helpers_dx12
@@ -50,13 +49,10 @@ namespace nv_helpers_dx12
 
 //--------------------------------------------------------------------------------------------------
 // The pipeline helper requires access to the device, as well as the
-// raytracing device prior to Windows 10 RS5.
-RayTracingPipelineGenerator::RayTracingPipelineGenerator(ID3D12Device8* device)
-    : m_device(device)
+// raytracing device prior to Windows 10 RS5. Also to the global root signature holding the resources shared by every shader.
+RayTracingPipelineGenerator::RayTracingPipelineGenerator(ID3D12Device8 *device, ID3D12RootSignature *globalRootSignature)
+    : m_device(device), m_globalRootSignature(globalRootSignature)
 {
-  // The pipeline creation requires having at least one empty global and local root signatures, so
-  // we systematically create both, as this does not incur any overhead
-  CreateDummyRootSignatures();
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -143,9 +139,8 @@ ID3D12StateObject* RayTracingPipelineGenerator::Generate()
       m_libraries.size() +                     // DXIL libraries
       m_hitGroups.size() +                     // Hit group declarations
       1 +                                      // Shader configuration
-      1 +                                      // Shader payload
       2 * m_rootSignatureAssociations.size() + // Root signature declaration + association
-      2 +                                      // Empty global and local root signatures
+      1 +                                      // Global root signature
       1;                                       // Final pipeline subobject
 
   // Initialize a vector with the target object count. It is necessary to make the allocation before
@@ -186,34 +181,6 @@ ID3D12StateObject* RayTracingPipelineGenerator::Generate()
 
   subobjects[currentIndex++] = shaderConfigObject;
 
-  // Build a list of all the symbols for ray generation, miss and hit groups
-  // Those shaders have to be associated with the payload definition
-  std::vector<std::wstring> exportedSymbols = {};
-  std::vector<LPCWSTR> exportedSymbolPointers = {};
-  BuildShaderExportList(exportedSymbols);
-
-  // Build an array of the string pointers
-  exportedSymbolPointers.reserve(exportedSymbols.size());
-  for (const auto& name : exportedSymbols)
-  {
-    exportedSymbolPointers.push_back(name.c_str());
-  }
-  const WCHAR** shaderExports = exportedSymbolPointers.data();
-
-  // Add a subobject for the association between shaders and the payload
-  D3D12_SUBOBJECT_TO_EXPORTS_ASSOCIATION shaderPayloadAssociation = {};
-  shaderPayloadAssociation.NumExports = static_cast<UINT>(exportedSymbols.size());
-  shaderPayloadAssociation.pExports = shaderExports;
-
-  // Associate the set of shaders with the payload defined in the previous subobject
-  shaderPayloadAssociation.pSubobjectToAssociate = &subobjects[(currentIndex - 1)];
-
-  // Create and store the payload association object
-  D3D12_STATE_SUBOBJECT shaderPayloadAssociationObject = {};
-  shaderPayloadAssociationObject.Type = D3D12_STATE_SUBOBJECT_TYPE_SUBOBJECT_TO_EXPORTS_ASSOCIATION;
-  shaderPayloadAssociationObject.pDesc = &shaderPayloadAssociation;
-  subobjects[currentIndex++] = shaderPayloadAssociationObject;
-
   // The root signature association requires two objects for each: one to declare the root
   // signature, and another to associate that root signature to a set of symbols
   for (RootSignatureAssociation& assoc : m_rootSignatureAssociations)
@@ -239,20 +206,14 @@ ID3D12StateObject* RayTracingPipelineGenerator::Generate()
     subobjects[currentIndex++] = rootSigAssociationObject;
   }
 
-  // The pipeline construction always requires an empty global root signature
+  // Shaders without a local root signature association get an implicit empty one, so no dummy
+  // local root signature is declared.
   D3D12_STATE_SUBOBJECT globalRootSig;
   globalRootSig.Type = D3D12_STATE_SUBOBJECT_TYPE_GLOBAL_ROOT_SIGNATURE;
-  ID3D12RootSignature* dgSig = m_dummyGlobalRootSignature;
-  globalRootSig.pDesc = &dgSig;
+  ID3D12RootSignature *globalSig = m_globalRootSignature;
+  globalRootSig.pDesc = &globalSig;
 
   subobjects[currentIndex++] = globalRootSig;
-
-  // The pipeline construction always requires an empty local root signature
-  D3D12_STATE_SUBOBJECT dummyLocalRootSig;
-  dummyLocalRootSig.Type = D3D12_STATE_SUBOBJECT_TYPE_LOCAL_ROOT_SIGNATURE;
-  ID3D12RootSignature* dlSig = m_dummyLocalRootSignature;
-  dummyLocalRootSig.pDesc = &dlSig;
-  subobjects[currentIndex++] = dummyLocalRootSig;
 
   // Add a subobject for the ray tracing pipeline configuration
   D3D12_RAYTRACING_PIPELINE_CONFIG pipelineConfig = {};
@@ -280,155 +241,6 @@ ID3D12StateObject* RayTracingPipelineGenerator::Generate()
   }
 
   return rtStateObject;
-}
-
-//--------------------------------------------------------------------------------------------------
-//
-// The pipeline creation requires having at least one empty global and local root signatures, so
-// we systematically create both
-void RayTracingPipelineGenerator::CreateDummyRootSignatures()
-{
-  // Creation of the global root signature
-  D3D12_ROOT_SIGNATURE_DESC rootDesc = {};
-  rootDesc.NumParameters = 0;
-  rootDesc.pParameters = nullptr;
-  // A global root signature is the default, hence this flag
-  rootDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_NONE;
-
-  HRESULT hr = 0;
-
-  ID3DBlob* serializedRootSignature;
-  ID3DBlob* error;
-
-  // Create the empty global root signature
-  hr = D3D12SerializeRootSignature(&rootDesc, D3D_ROOT_SIGNATURE_VERSION_1,
-                                   &serializedRootSignature, &error);
-  if (FAILED(hr))
-  {
-    throw std::logic_error("Could not serialize the global root signature");
-  }
-  hr = m_device->CreateRootSignature(0, serializedRootSignature->GetBufferPointer(),
-                                     serializedRootSignature->GetBufferSize(),
-                                     IID_PPV_ARGS(&m_dummyGlobalRootSignature));
-
-  serializedRootSignature->Release();
-  if (FAILED(hr))
-  {
-    throw std::logic_error("Could not create the global root signature");
-  }
-
-  // Create the local root signature, reusing the same descriptor but altering the creation flag
-  rootDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_LOCAL_ROOT_SIGNATURE;
-  hr = D3D12SerializeRootSignature(&rootDesc, D3D_ROOT_SIGNATURE_VERSION_1,
-                                   &serializedRootSignature, &error);
-  if (FAILED(hr))
-  {
-    throw std::logic_error("Could not serialize the local root signature");
-  }
-  hr = m_device->CreateRootSignature(0, serializedRootSignature->GetBufferPointer(),
-                                     serializedRootSignature->GetBufferSize(),
-                                     IID_PPV_ARGS(&m_dummyLocalRootSignature));
-
-  serializedRootSignature->Release();
-  if (FAILED(hr))
-  {
-    throw std::logic_error("Could not create the local root signature");
-  }
-}
-
-//--------------------------------------------------------------------------------------------------
-//
-// Build a list containing the export symbols for the ray generation shaders, miss shaders, and
-// hit group names
-void RayTracingPipelineGenerator::BuildShaderExportList(std::vector<std::wstring>& exportedSymbols)
-{
-  // Get all names from libraries
-  // Get names associated to hit groups
-  // Return list of libraries+hit group names - shaders in hit groups
-
-  std::unordered_set<std::wstring> exports;
-
-  // Add all the symbols exported by the libraries
-  for (const Library& lib : m_libraries)
-  {
-    for (const auto& exportName : lib.m_exportedSymbols)
-    {
-#ifdef _DEBUG
-      // Sanity check in debug mode: check that no name is exported more than once
-      if (exports.find(exportName) != exports.end())
-      {
-        throw std::logic_error("Multiple definition of a symbol in the imported DXIL libraries");
-      }
-#endif
-      exports.insert(exportName);
-    }
-  }
-
-#ifdef _DEBUG
-  // Sanity check in debug mode: verify that the hit groups do not reference an unknown shader name
-  std::unordered_set<std::wstring> all_exports = exports;
-
-  for (const auto& hitGroup : m_hitGroups)
-  {
-    if (!hitGroup.m_anyHitSymbol.empty() && exports.find(hitGroup.m_anyHitSymbol) == exports.end())
-    {
-      throw std::logic_error("Any hit symbol not found in the imported DXIL libraries");
-    }
-
-    if (!hitGroup.m_closestHitSymbol.empty() &&
-        exports.find(hitGroup.m_closestHitSymbol) == exports.end())
-    {
-      throw std::logic_error("Closest hit symbol not found in the imported DXIL libraries");
-    }
-
-    if (!hitGroup.m_intersectionSymbol.empty() &&
-        exports.find(hitGroup.m_intersectionSymbol) == exports.end())
-    {
-      throw std::logic_error("Intersection symbol not found in the imported DXIL libraries");
-    }
-
-    all_exports.insert(hitGroup.m_hitGroupName);
-  }
-
-  // Sanity check in debug mode: verify that the root signature associations do not reference an
-  // unknown shader or hit group name
-  for (const auto& assoc : m_rootSignatureAssociations)
-  {
-    for (const auto& symb : assoc.m_symbols)
-    {
-      if (!symb.empty() && all_exports.find(symb) == all_exports.end())
-      {
-        throw std::logic_error("Root association symbol not found in the "
-                               "imported DXIL libraries and hit group names");
-      }
-    }
-  }
-#endif
-
-  // Go through all hit groups and remove the symbols corresponding to intersection, any hit and
-  // closest hit shaders from the symbol set
-  for (const auto& hitGroup : m_hitGroups)
-  {
-    if (!hitGroup.m_anyHitSymbol.empty())
-    {
-      exports.erase(hitGroup.m_anyHitSymbol);
-    }
-    if (!hitGroup.m_closestHitSymbol.empty())
-    {
-      exports.erase(hitGroup.m_closestHitSymbol);
-    }
-    if (!hitGroup.m_intersectionSymbol.empty())
-    {
-      exports.erase(hitGroup.m_intersectionSymbol);
-    }
-    exports.insert(hitGroup.m_hitGroupName);
-  }
-
-  // Finally build a vector containing ray generation and miss shaders, plus the hit group names
-  for (const auto& name : exports)
-  {
-    exportedSymbols.push_back(name);
-  }
 }
 
 //--------------------------------------------------------------------------------------------------

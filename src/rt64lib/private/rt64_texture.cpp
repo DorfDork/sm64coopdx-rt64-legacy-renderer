@@ -52,6 +52,10 @@ void RT64::Texture::setRawWithFormat(DXGI_FORMAT format, const void *bytes, int 
 		textureDesc.Format = format;
 		textureDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
 
+		if (generateMipmaps) {
+			textureDesc.Flags |= D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+		}
+
 		// Create the texture resource
 		texture = device->allocateResource(D3D12_HEAP_TYPE_DEFAULT, &textureDesc, D3D12_RESOURCE_STATE_COPY_DEST, nullptr);
 
